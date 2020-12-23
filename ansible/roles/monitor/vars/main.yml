@@ -1,0 +1,6 @@
+---
+
+prometheus_service_name: prometheus
+prometheus_user_name: prometheus
+prometheus_group_name: prometheus
+prometheus_version: "2.23.0"

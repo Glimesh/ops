@@ -1,0 +1,9 @@
+---
+
+- name: reload systemctl
+  command: systemctl daemon-reload
+
+- name: restart janus
+  systemd:
+    name: janus
+    state: restarted

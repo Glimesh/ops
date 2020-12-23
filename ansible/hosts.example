@@ -1,0 +1,36 @@
+# Rename this file to hosts
+
+# Ftl
+[ftl:vars]
+ftl_orchestrator_psk=some_value
+ftl_orchestrator_hostname=some_value
+letsencrypt_email=some_value
+glimesh_client_id=some_value
+glimesh_client_secret=some_value
+
+[ftl:children]
+ftl_ingest
+ftl_edge
+ftl_orchestrator
+
+[ftl_ingest]
+some-ftl-ingest-servers
+some-ftl-ingest-servers
+
+[ftl_edge]
+some-ftl-edge-servers
+some-ftl-edge-servers
+some-ftl-edge-servers
+
+[ftl_orchestrator]
+some-orchestrator-server
+
+# Monitoring
+[monitor]
+monitoring-server
+
+[node_exporter:children]
+ftl
+
+[all:vars]
+ansible_user=root

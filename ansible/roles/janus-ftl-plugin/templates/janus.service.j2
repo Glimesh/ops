@@ -1,0 +1,29 @@
+[Unit]
+Description=Janus WebRTC Server
+Requires=network.target
+After=syslog.target network.target
+
+[Service]
+User=root
+Nice=1
+Restart=on-abnormal
+LimitNOFILE=65536
+ExecStart=/opt/janus/bin/janus -o
+
+Environment="FTL_NODE_KIND={{ ftl_node_kind }}"
+
+Environment="FTL_ORCHESTRATOR_HOSTNAME={{ ftl_orchestrator_hostname }}"
+Environment="FTL_ORCHESTRATOR_PORT=8085"
+Environment="FTL_ORCHESTRATOR_PSK={{ ftl_orchestrator_psk }}"
+Environment="FTL_ORCHESTRATOR_REGION_CODE=us-east"
+
+Environment="FTL_SERVICE_CONNECTION=GLIMESH"
+Environment="FTL_SERVICE_METADATAREPORTINTERVALMS=10000"
+Environment="FTL_SERVICE_GLIMESH_HOSTNAME=glimesh.tv"
+Environment="FTL_SERVICE_GLIMESH_PORT=443"
+Environment="FTL_SERVICE_GLIMESH_HTTPS=1"
+Environment="FTL_SERVICE_GLIMESH_CLIENTID={{ glimesh_client_id }}"
+Environment="FTL_SERVICE_GLIMESH_CLIENTSECRET={{ glimesh_client_secret }}"
+
+[Install]
+WantedBy=multi-user.target

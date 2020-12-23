@@ -1,0 +1,14 @@
+[Unit]
+Description={{ node_exporter_service }}
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User={{ node_exporter_user_name }}
+Group={{ node_exporter_group_name }}
+Restart=on-failure
+Type=simple
+ExecStart={{ node_exporter_exec_command }}
+
+[Install]
+WantedBy=multi-user.target

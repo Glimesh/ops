@@ -1,0 +1,14 @@
+[Unit]
+Description={{ prometheus_service_name }}
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User={{ prometheus_user_name }}
+Group={{ prometheus_group_name }}
+Restart=on-abnormal
+Type=simple
+ExecStart=/usr/local/bin/prometheus --config.file=/etc/prometheus/prometheus.conf --storage.tsdb.path=/data/prometheus --storage.tsdb.retention=2d
+
+[Install]
+WantedBy=multi-user.target

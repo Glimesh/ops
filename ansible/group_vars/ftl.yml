@@ -1,0 +1,8 @@
+---
+
+ftl_orchestrator_psk: some_key
+ftl_orchestrator_hostname: orchestrator.example.com
+letsencrypt_email: certs@example.com
+
+glimesh_client_id: some_key
+glimesh_client_secret: some_key

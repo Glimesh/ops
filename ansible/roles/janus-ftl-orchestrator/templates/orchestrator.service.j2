@@ -1,0 +1,15 @@
+[Unit]
+Description=Janus FTL Orchestrator
+Requires=network.target
+After=syslog.target network.target
+
+[Service]
+User=root
+Nice=1
+Restart=on-abnormal
+LimitNOFILE=65536
+ExecStart=/opt/orchestrator/bin/orchestrator
+Environment="FTL_ORCHESTRATOR_PSK={{ ftl_orchestrator_psk }}"
+
+[Install]
+WantedBy=multi-user.target

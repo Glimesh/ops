@@ -1,0 +1,69 @@
+---
+
+- name: Set a hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: install required packages
+  apt:
+    pkg: 
+      - python3 
+      - python3-pip 
+      - python3-setuptools 
+      - python3-dev 
+      - python3-wheel 
+      - ninja-build 
+      - gcc-10 
+      - g++-10
+      - libssl-dev
+      - pkg-config
+      - build-essential
+    state: present
+    update_cache: yes
+
+- name: install meson
+  pip:
+    name: meson
+
+# janus-ftl-orchestrator
+- name: ensure /tmp/janus-ftl-orchestrator exists
+  file: path=/tmp/janus-ftl-orchestrator state=directory
+
+- name: download & extract janus-ftl-orchestrator
+  git:
+    repo: https://github.com/Glimesh/janus-ftl-orchestrator.git
+    dest: /tmp/janus-ftl-orchestrator
+    recursive: true
+    update: true
+    force: true
+    version: "{{ janus_ftl_orchestrator_version }}"
+
+- name: meson janus-ftl-orchestrator
+  shell: CC=gcc-10 CXX=g++-10 meson build/ --buildtype=release
+  args:
+    chdir: /tmp/janus-ftl-orchestrator
+
+- name: build janus-ftl-orchestrator
+  command: ninja -C build
+  args:
+    chdir: /tmp/janus-ftl-orchestrator
+
+- name: ensure /opt/orchestrator/bin exists
+  file: path=/opt/orchestrator/bin state=directory
+
+- name: move executable to /opt/orchestrator/bin/orchestrator
+  command: mv /tmp/janus-ftl-orchestrator/build/janus-ftl-orchestrator /opt/orchestrator/bin/orchestrator
+
+- name: chmod +x /opt/janus/bin/janus
+  file: 
+    path: /opt/orchestrator/bin/orchestrator
+    mode: a+x
+    
+# Orchestrator Service
+- name: Create Unit file for orchestrator
+  template: src=orchestrator.service.j2 dest=/etc/systemd/system/orchestrator.service mode=644
+  notify:
+    - reload systemctl
+
+- name: Start orchestrator
+  service: name=orchestrator.service state=restarted enabled=yes

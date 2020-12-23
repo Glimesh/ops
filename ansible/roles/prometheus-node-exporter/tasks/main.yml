@@ -1,0 +1,49 @@
+---
+
+- name: Creating node_exporter user group
+  group: name="{{ node_exporter_group_name }}"
+  become: true
+
+- name: Creating node_exporter user
+  user:
+    name: "{{ node_exporter_user_name }}"
+    group: "{{ node_exporter_group_name }}"
+    system: yes
+    shell: "/sbin/nologin"
+    comment: "{{ node_exporter_user_name }} nologin User"
+    createhome: "no"
+    state: present
+
+- name: Install prometheus node exporter
+  unarchive:
+    src: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+    dest: /tmp/
+    remote_src: yes
+
+- name: Copy prometheus node exporter file to bin
+  copy:
+    src: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+    dest: "/usr/local/bin/node_exporter"
+    owner: "{{ node_exporter_user_name }}"
+    group: "{{ node_exporter_group_name }}"
+    remote_src: yes
+    mode: 0755
+
+- name: Delete node exporter tmp folder
+  file:
+    path: '/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64'
+    state: absent
+
+- name: Create Unit file for node_exporter
+  template: src=node_exporter.service.j2 dest=/etc/systemd/system/node_exporter.service mode=644
+  notify:
+    - reload systemctl
+
+- name: start node_exporter service
+  service: name=node_exporter.service state=restarted enabled=yes
+
+- name: Check if node exporter emits metrices
+  uri:
+    url: http://127.0.0.1:9100/metrics
+    method: GET
+    status_code: 200

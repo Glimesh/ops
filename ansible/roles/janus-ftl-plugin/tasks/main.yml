@@ -1,0 +1,186 @@
+---
+
+- name: Set a hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: install required packages
+  apt:
+    pkg: 
+      - curl 
+      - libmicrohttpd-dev 
+      - libjansson-dev 
+      - libssl-dev 
+      - libsofia-sip-ua-dev 
+      - libglib2.0-dev 
+      - libopus-dev 
+      - libogg-dev 
+      - libcurl4-openssl-dev 
+      - liblua5.3-dev 
+      - libconfig-dev 
+      - pkg-config 
+      - gengetopt 
+      - libtool 
+      - automake 
+      - python3 
+      - python3-pip 
+      - python3-setuptools 
+      - python3-dev 
+      - python3-wheel 
+      - ninja-build 
+      - libavcodec-dev
+    state: present
+    update_cache: yes
+
+- name: install meson
+  pip:
+    name: meson
+
+# libnice
+- name: ensure /tmp/libnice exists
+  file: path=/tmp/libnice state=directory
+
+- name: download libnice
+  git:
+    repo: https://github.com/libnice/libnice.git
+    dest: /tmp/libnice
+    recursive: true
+    update: true
+    force: true
+    version: "{{ libnice_version }}"
+  register: libnice
+
+- name: meson build libnice
+  command: meson --prefix=/usr build/
+  args:
+    chdir: /tmp/libnice
+  when: libnice.changed
+
+- name: build libnice
+  command: ninja -C build
+  args:
+    chdir: /tmp/libnice
+  when: libnice.changed
+
+- name: install libnice
+  command: ninja -C build install
+  args:
+    chdir: /tmp/libnice
+  when: libnice.changed
+
+# libsrtp
+- name: ensure /tmp/libsrtp exists
+  file: path=/tmp/libsrtp state=directory
+
+- name: download libsrtp
+  git:
+    repo: https://github.com/cisco/libsrtp.git
+    dest: /tmp/libsrtp
+    recursive: true
+    update: true
+    force: true
+    version: "{{ libsrtp_version }}"
+  register: libsrtp
+
+- name: config libsrtp 
+  command: ./configure --prefix=/usr --enable-openssl
+  args:
+    chdir: /tmp/libsrtp
+  when: libsrtp.changed
+
+- name: make shared library for libsrtp
+  make:
+    chdir: /tmp/libsrtp
+    target: shared_library
+  when: libsrtp.changed
+
+- name: make install library for libsrtp
+  make:
+    chdir: /tmp/libsrtp
+    target: install
+  when: libsrtp.changed
+
+# janus-gateway
+- name: ensure /tmp/janus-gateway exists
+  file: path=/tmp/janus-gateway state=directory
+
+- name: download janus-gateway
+  git:
+    repo: https://github.com/meetecho/janus-gateway.git
+    dest: /tmp/janus-gateway
+    recursive: true
+    update: true
+    force: true
+    version: "{{ janusgateway_version }}"
+  register: janus
+
+- name: run authgen.sh for janus-gateway 
+  command: sh autogen.sh 
+  args:
+    chdir: /tmp/janus-gateway
+  when: janus.changed
+
+- name: configure janus-gateway 
+  command: ./configure --prefix=/opt/janus
+  args:
+    chdir: /tmp/janus-gateway
+  when: janus.changed
+
+- name: make janus-gateway
+  make:
+    chdir: /tmp/janus-gateway
+  when: janus.changed
+
+- name: make shared library for janus-gateway
+  make:
+    chdir: /tmp/janus-gateway
+    target: configs
+  when: janus.changed
+
+- name: make install library for janus-gateway
+  make:
+    chdir: /tmp/janus-gateway
+    target: install
+  when: janus.changed
+
+# janus-ftl-plugin
+- name: ensure /tmp/janus-ftl-plugin exists
+  file: path=/tmp/janus-ftl-plugin state=directory
+
+- name: download janus-ftl-plugin
+  git:
+    repo: https://github.com/Glimesh/janus-ftl-plugin.git
+    dest: /tmp/janus-ftl-plugin
+    recursive: true
+    update: true
+    force: true
+    version: "{{ janus_ftl_plugin_version }}"
+  register: janus_ftl_plugin
+
+- name: meson janus-ftl-plugin
+  command: meson build/ --buildtype=release
+  args:
+    chdir: /tmp/janus-ftl-plugin
+  when: janus_ftl_plugin.changed
+
+- name: build janus-ftl-plugin
+  command: ninja 
+  args:
+    chdir: /tmp/janus-ftl-plugin/build
+  when: janus_ftl_plugin.changed
+
+- name: install janus-ftl-plugin
+  command: ninja install 
+  args:
+    chdir: /tmp/janus-ftl-plugin/build
+  when: janus_ftl_plugin.changed
+    
+# Janus Service
+- name: Create Unit file for janus
+  template: src=janus.service.j2 dest=/etc/systemd/system/janus.service mode=644
+  notify:
+    - reload systemctl
+
+- name: Start janus
+  service: name=janus.service state=started enabled=yes
+  when: libnice.changed or libsrtp.changed or janus.changed or janus_ftl_plugin.changed

@@ -1,0 +1,8 @@
+---
+
+- name: set a hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+
+- include: grafana.yml
+- include: prometheus.yml

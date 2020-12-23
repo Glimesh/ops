@@ -1,0 +1,26 @@
+
+- name: ftl orchestrator 
+  hosts: ftl_orchestrator
+  roles:
+    - janus-ftl-orchestrator
+    - prometheus-node-exporter
+
+- name: ftl ingest 
+  hosts: ftl_ingest
+  roles:
+    - janus-ftl-plugin
+    - prometheus-node-exporter
+
+- name: ftl edge 
+  hosts: ftl_edge
+  vars:
+    ftl_node_kind: edge
+  roles:
+    - janus-ftl-plugin
+    - janus-ftl-nginx-ssl
+    - prometheus-node-exporter
+
+- name: monitoring server 
+  hosts: monitor
+  roles:
+    - monitor
