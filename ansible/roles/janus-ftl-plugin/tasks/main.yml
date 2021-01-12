@@ -7,7 +7,6 @@
 - name: install required packages
   apt:
     pkg: 
-      - curl 
       - libmicrohttpd-dev 
       - libjansson-dev 
       - libssl-dev 
@@ -29,6 +28,8 @@
       - python3-wheel 
       - ninja-build 
       - libavcodec-dev
+      - gcc-10 
+      - g++-10
     state: present
     update_cache: yes
 
@@ -155,25 +156,26 @@
     update: true
     force: true
     version: "{{ janus_ftl_plugin_version }}"
-  register: janus_ftl_plugin
+  # register: janus_ftl_plugin
 
+  # --buildtype=release
 - name: meson janus-ftl-plugin
-  command: meson build/ --buildtype=release
+  shell: CC=gcc-10 CXX=g++-10 meson build/ 
   args:
     chdir: /tmp/janus-ftl-plugin
-  when: janus_ftl_plugin.changed
+  # when: janus_ftl_plugin.changed
 
 - name: build janus-ftl-plugin
   command: ninja 
   args:
     chdir: /tmp/janus-ftl-plugin/build
-  when: janus_ftl_plugin.changed
+  # when: janus_ftl_plugin.changed
 
 - name: install janus-ftl-plugin
   command: ninja install 
   args:
     chdir: /tmp/janus-ftl-plugin/build
-  when: janus_ftl_plugin.changed
+  # when: janus_ftl_plugin.changed
     
 # Janus Service
 - name: Create Unit file for janus
@@ -183,4 +185,4 @@
 
 - name: Start janus
   service: name=janus.service state=started enabled=yes
-  when: libnice.changed or libsrtp.changed or janus.changed or janus_ftl_plugin.changed
+  # when: libnice.changed or libsrtp.changed or janus.changed or janus_ftl_plugin.changed

@@ -6,7 +6,11 @@ terraform {
     }
     digitalocean = {
       source  = "digitalocean/digitalocean"
-      version = "1.22.2"
+      version = "2.3.0"
+    }
+    uptimerobot = {
+      source  = "louy/uptimerobot"
+      version = "0.5.1"
     }
   }
 }
@@ -17,4 +21,8 @@ provider "digitalocean" {
 
 provider "cloudflare" {
   api_token = var.cloudflare_api_token
+}
+
+provider "uptimerobot" {
+  api_key = var.uptimerobot_api_key
 }

@@ -1,0 +1,42 @@
+---
+
+elixir_version: "1.11.2"
+glimesh_version: "dev"
+
+glimesh_home: some_value
+
+glimesh_release_cookie: some_value
+glimesh_release_node: some_value
+glimesh_release_distribution: some_value
+
+glimesh_database_url: some_value
+glimesh_secret_key_base: some_value
+glimesh_live_view_signing_salt: some_value
+glimesh_url_scheme: some_value
+glimesh_url_host: some_value
+glimesh_url_port: some_value
+glimesh_http_port: some_value
+
+glimesh_mailgun_domain: some_value
+glimesh_mailgun_api_key: some_value
+
+glimesh_stripe_public_api_key: some_value
+glimesh_stripe_api_key: some_value
+glimesh_stripe_connect_client_id: some_value
+glimesh_stripe_webhook_secret: some_value
+
+glimesh_glimesh_email_physical_address: some_value
+
+glimesh_hcaptcha_public_key: some_value
+glimesh_hcaptcha_secret: some_value
+
+glimesh_waffle_endpoint: some_value
+glimesh_do_spaces_public_key: some_value
+glimesh_do_spaces_private_key: some_value
+glimesh_do_spaces_bucket: some_value
+glimesh_waffle_asset_host: some_value
+
+glimesh_twitter_consumer_key: some_value
+glimesh_twitter_consumer_secret: some_value
+glimesh_twitter_access_token: some_value
+glimesh_twitter_access_secret: some_value

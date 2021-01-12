@@ -39,7 +39,7 @@
     version: "{{ janus_ftl_orchestrator_version }}"
 
 - name: meson janus-ftl-orchestrator
-  shell: CC=gcc-10 CXX=g++-10 meson build/ --buildtype=release
+  shell: CC=gcc-10 CXX=g++-10 meson build/ --buildtype=debugoptimized
   args:
     chdir: /tmp/janus-ftl-orchestrator
 

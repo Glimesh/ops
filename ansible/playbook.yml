@@ -1,4 +1,11 @@
 
+- name: web 
+  hosts: web
+  serial: 1
+  roles:
+    - glimesh-web
+    - prometheus-node-exporter
+
 - name: ftl orchestrator 
   hosts: ftl_orchestrator
   roles:

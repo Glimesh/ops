@@ -1,0 +1,52 @@
+[Unit]
+Description=Glimesh.tv
+Requires=network.target
+After=syslog.target network.target
+
+[Service]
+User=nobody
+Nice=1
+Restart=on-abnormal
+LimitNOFILE=65536
+ExecStart=/opt/glimesh.tv/prod/rel/glimesh/bin/glimesh start
+
+Environment="HOME={{ glimesh_home }}"
+
+Environment="RELEASE_COOKIE={{ glimesh_release_cookie }}"
+Environment="RELEASE_NODE={{ glimesh_release_node }}"
+Environment="RELEASE_DISTRIBUTION={{ glimesh_release_distribution }}"
+
+Environment="DATABASE_URL={{ glimesh_database_url }}"
+Environment="SECRET_KEY_BASE={{ glimesh_secret_key_base }}"
+Environment="LIVE_VIEW_SIGNING_SALT={{ glimesh_live_view_signing_salt }}"
+Environment="URL_SCHEME={{ glimesh_url_scheme }}"
+Environment="URL_HOST={{ glimesh_url_host }}"
+Environment="URL_PORT={{ glimesh_url_port }}"
+Environment="HTTP_PORT={{ glimesh_http_port }}"
+
+Environment="MAILGUN_DOMAIN={{ glimesh_mailgun_domain }}"
+Environment="MAILGUN_API_KEY={{ glimesh_mailgun_api_key }}"
+
+Environment="STRIPE_PUBLIC_API_KEY={{ glimesh_stripe_public_api_key }}"
+Environment="STRIPE_API_KEY={{ glimesh_stripe_api_key }}"
+Environment="STRIPE_CONNECT_CLIENT_ID={{ glimesh_stripe_connect_client_id }}"
+Environment="STRIPE_WEBHOOK_SECRET={{ glimesh_stripe_webhook_secret }}"
+
+Environment="GLIMESH_EMAIL_PHYSICAL_ADDRESS={{ glimesh_glimesh_email_physical_address }}"
+
+Environment="HCAPTCHA_PUBLIC_KEY={{ glimesh_hcaptcha_public_key }}"
+Environment="HCAPTCHA_SECRET={{ glimesh_hcaptcha_secret }}"
+
+Environment="WAFFLE_ENDPOINT={{ glimesh_waffle_endpoint }}"
+Environment="DO_SPACES_PUBLIC_KEY={{ glimesh_do_spaces_public_key }}"
+Environment="DO_SPACES_PRIVATE_KEY=+{{ glimesh_do_spaces_private_key }}"
+Environment="DO_SPACES_BUCKET={{ glimesh_do_spaces_bucket }}"
+
+Environment="WAFFLE_ASSET_HOST={{ glimesh_waffle_asset_host }}"
+Environment="TWITTER_CONSUMER_KEY={{ glimesh_twitter_consumer_key }}"
+Environment="TWITTER_CONSUMER_SECRET={{ glimesh_twitter_consumer_secret }}"
+Environment="TWITTER_ACCESS_TOKEN={{ glimesh_twitter_access_token }}"
+Environment="TWITTER_ACCESS_SECRET={{ glimesh_twitter_access_secret }}"
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,6 @@
+---
+
+janus_ftl_orchestrator_version: "main"
+
+ftl_orchestrator_hostname: orchestrator.example.com
+ftl_orchestrator_psk: some_key

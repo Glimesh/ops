@@ -7,6 +7,7 @@ After=syslog.target network.target
 User=root
 Nice=1
 Restart=on-abnormal
+RestartSec=10
 LimitNOFILE=65536
 ExecStart=/opt/janus/bin/janus -o
 

@@ -1,0 +1,109 @@
+---
+
+- name: set a hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: install elixir
+  apt:
+    deb: https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb
+
+- name: install required packages
+  apt:
+    pkg: 
+      - esl-erlang 
+      - elixir 
+      - npm 
+      - git
+      - openssl 
+      - imagemagick
+    state: present
+    update_cache: yes
+
+- name: install hex
+  command: mix local.hex --force
+
+- name: install rebar
+  command: mix local.rebar --force
+
+- name: ensure /tmp/glimesh.tv exists
+  file: path=/tmp/glimesh.tv state=directory
+
+- name: download glimesh.tv
+  git:
+    repo: https://github.com/Glimesh/glimesh.tv.git
+    dest: /tmp/glimesh.tv
+    recursive: true
+    update: true
+    force: true
+    version: "{{ glimesh_version }}"
+  register: glimesh
+
+- name: register short git hash version
+  command: git rev-parse --short HEAD
+  args:
+    chdir: /tmp/glimesh.tv
+  register: glimesh_git_hash
+
+- name: change version 
+  lineinfile:
+    path: /tmp/glimesh.tv/mix.exs
+    regexp: '^\s+version: .*$'
+    line: "version: \"0.1.0+{{ glimesh_git_hash.stdout }}\","
+
+- name: install mix dependencies
+  command: mix do deps.get, deps.compile 
+  args:
+    chdir: /tmp/glimesh.tv
+  environment:
+    MIX_ENV: prod
+  # when: glimesh.changed
+
+- name: install npm asset deps
+  command: npm --prefix ./assets ci --progress=false --no-audit --loglevel=error
+  args:
+    chdir: /tmp/glimesh.tv
+  # when: glimesh.changed
+
+- name: build static assets
+  command: npm run --prefix ./assets deploy
+  args:
+    chdir: /tmp/glimesh.tv
+  # when: glimesh.changed
+
+- name: digest static assets
+  command: mix phx.digest
+  args:
+    chdir: /tmp/glimesh.tv
+  # when: glimesh.changed
+
+- name: build glimesh.tv
+  command: mix do compile --force, release --force --overwrite 
+  args:
+    chdir: /tmp/glimesh.tv
+  environment:
+    MIX_ENV: prod
+  # when: glimesh.changed
+
+- name: copy built glimesh.tv
+  command: cp -Rf /tmp/glimesh.tv/_build/prod /opt/glimesh.tv 
+
+- name: permissions
+  file:
+    path: /opt/glimesh.tv
+    owner: nobody
+    recurse: yes
+
+- name: create unit file for glimesh.tv
+  template: src=glimesh.service.j2 dest=/etc/systemd/system/glimesh.service mode=644
+  notify:
+    - reload systemctl
+    - restarted glimesh
+
+- name: start glimesh
+  service: name=glimesh.service state=started enabled=yes
+
+- name: wait for service to be online
+  wait_for:
+    port: 8080
+    delay: 5
