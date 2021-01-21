@@ -1,9 +1,11 @@
 ---
 
-- name: reload systemctl
-  command: systemctl daemon-reload
-
 - name: restarted glimesh
   systemd:
     name: glimesh
+    daemon_reload: yes
     state: restarted
+
+- name: reloaded systemd
+  systemd:
+    daemon_reload: yes

@@ -7,6 +7,7 @@ After=syslog.target network.target
 User=nobody
 Nice=1
 Restart=on-abnormal
+RestartSec=5
 LimitNOFILE=65536
 ExecStart=/opt/glimesh.tv/prod/rel/glimesh/bin/glimesh start
 
@@ -39,7 +40,7 @@ Environment="HCAPTCHA_SECRET={{ glimesh_hcaptcha_secret }}"
 
 Environment="WAFFLE_ENDPOINT={{ glimesh_waffle_endpoint }}"
 Environment="DO_SPACES_PUBLIC_KEY={{ glimesh_do_spaces_public_key }}"
-Environment="DO_SPACES_PRIVATE_KEY=+{{ glimesh_do_spaces_private_key }}"
+Environment="DO_SPACES_PRIVATE_KEY={{ glimesh_do_spaces_private_key }}"
 Environment="DO_SPACES_BUCKET={{ glimesh_do_spaces_bucket }}"
 
 Environment="WAFFLE_ASSET_HOST={{ glimesh_waffle_asset_host }}"
@@ -47,6 +48,10 @@ Environment="TWITTER_CONSUMER_KEY={{ glimesh_twitter_consumer_key }}"
 Environment="TWITTER_CONSUMER_SECRET={{ glimesh_twitter_consumer_secret }}"
 Environment="TWITTER_ACCESS_TOKEN={{ glimesh_twitter_access_token }}"
 Environment="TWITTER_ACCESS_SECRET={{ glimesh_twitter_access_secret }}"
+
+Environment="APP_REVISION={{ glimesh_git_hash.stdout }}"
+Environment="APPSIGNAL_NAME={{ appsignal_name }}"
+Environment="APPSIGNAL_API_KEY={{ appsignal_api_key }}"
 
 [Install]
 WantedBy=multi-user.target

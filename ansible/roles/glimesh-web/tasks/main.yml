@@ -85,6 +85,15 @@
     MIX_ENV: prod
   # when: glimesh.changed
 
+- name: setup unit file for glimesh.tv
+  template: src=glimesh.service.j2 dest=/etc/systemd/system/glimesh.service mode=644
+  tags: config
+
+- name: reload systemd immediately
+  systemd:
+    daemon_reload: yes
+
+# Copying the file will automatically restart the daemon.
 - name: copy built glimesh.tv
   command: cp -Rf /tmp/glimesh.tv/_build/prod /opt/glimesh.tv 
 
@@ -93,15 +102,6 @@
     path: /opt/glimesh.tv
     owner: nobody
     recurse: yes
-
-- name: create unit file for glimesh.tv
-  template: src=glimesh.service.j2 dest=/etc/systemd/system/glimesh.service mode=644
-  notify:
-    - reload systemctl
-    - restarted glimesh
-
-- name: start glimesh
-  service: name=glimesh.service state=started enabled=yes
 
 - name: wait for service to be online
   wait_for:
