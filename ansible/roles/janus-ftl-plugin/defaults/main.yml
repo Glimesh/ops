@@ -1,8 +1,8 @@
 ---
 
-libnice_version: "0.1.17"
+libnice_version: "0.1.18"
 libsrtp_version: "v2.3.0"
-janusgateway_version: "v0.10.4"
+janusgateway_version: "v0.10.9"
 janus_ftl_plugin_version: "master"
 
 glimesh_client_id: some_key
