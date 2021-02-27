@@ -160,7 +160,7 @@
 
   # --buildtype=release
 - name: meson janus-ftl-plugin
-  shell: CC=gcc-10 CXX=g++-10 meson build/ 
+  shell: CC=gcc-10 CXX=g++-10 meson build/ --buildtype=debugoptimized
   args:
     chdir: /tmp/janus-ftl-plugin
   # when: janus_ftl_plugin.changed
@@ -175,13 +175,17 @@
   command: ninja install 
   args:
     chdir: /tmp/janus-ftl-plugin/build
+  notify:
+    - restart janus
   # when: janus_ftl_plugin.changed
-    
+
 # Janus Service
 - name: Create Unit file for janus
   template: src=janus.service.j2 dest=/etc/systemd/system/janus.service mode=644
   notify:
     - reload systemctl
+  tags: 
+    - config
 
 - name: Start janus
   service: name=janus.service state=started enabled=yes

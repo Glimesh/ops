@@ -4,21 +4,38 @@
   hostname:
     name: "{{ inventory_hostname }}"
 
-- name: install elixir
-  apt:
-    deb: https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb
+- name: Ensure .ssh directory exists.
+  file: 
+    dest: "/root/.ssh"
+    mode: 0700 
+    owner: root 
+    state: directory
 
-- name: install required packages
-  apt:
-    pkg: 
-      - esl-erlang 
-      - elixir 
-      - npm 
-      - git
-      - openssl 
-      - imagemagick
-    state: present
-    update_cache: yes
+- name: Install ssh key
+  copy: 
+    src: "glimesh-deploy" 
+    dest: "/root/.ssh/id_rsa"
+    mode: 0600
+    owner: root
+
+- name: Trust GitHub
+  shell: ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+# - name: install elixir
+#   apt:
+#     deb: https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb
+
+# - name: install required packages
+#   apt:
+#     pkg: 
+#       - esl-erlang 
+#       - elixir 
+#       - npm 
+#       - git
+#       - openssl 
+#       - imagemagick
+#     state: present
+#     update_cache: yes
 
 - name: install hex
   command: mix local.hex --force
@@ -93,6 +110,11 @@
   systemd:
     daemon_reload: yes
 
+- name: gracefully shut down old glimesh app
+  systemd: 
+    name: glimesh
+    state: stopped
+
 # Copying the file will automatically restart the daemon.
 - name: copy built glimesh.tv
   command: cp -Rf /tmp/glimesh.tv/_build/prod /opt/glimesh.tv 
@@ -103,7 +125,16 @@
     owner: nobody
     recurse: yes
 
+- name: start new glimesh app
+  systemd: 
+    name: glimesh
+    state: started
+
 - name: wait for service to be online
   wait_for:
     port: 8080
     delay: 5
+
+- name: pause to make sure the other node can take over
+  pause: 
+    seconds: 15

@@ -10,12 +10,15 @@ Restart=on-abnormal
 RestartSec=5
 LimitNOFILE=65536
 ExecStart=/opt/glimesh.tv/prod/rel/glimesh/bin/glimesh start
+ExecStop=/opt/glimesh.tv/prod/rel/glimesh/bin/glimesh stop
 
 Environment="HOME={{ glimesh_home }}"
 
 Environment="RELEASE_COOKIE={{ glimesh_release_cookie }}"
 Environment="RELEASE_NODE={{ glimesh_release_node }}"
 Environment="RELEASE_DISTRIBUTION={{ glimesh_release_distribution }}"
+
+Environment="ENABLE_LIBCLUSTER=true"
 
 Environment="DATABASE_URL={{ glimesh_database_url }}"
 Environment="SECRET_KEY_BASE={{ glimesh_secret_key_base }}"
@@ -52,6 +55,9 @@ Environment="TWITTER_ACCESS_SECRET={{ glimesh_twitter_access_secret }}"
 Environment="APP_REVISION={{ glimesh_git_hash.stdout }}"
 Environment="APPSIGNAL_NAME={{ appsignal_name }}"
 Environment="APPSIGNAL_API_KEY={{ appsignal_api_key }}"
+
+Environment="TAXIDPRO_API_KEY={{ glimesh_taxidpro_api_key }}"
+Environment="TAXIDPRO_WEBHOOK_SECRET={{ glimesh_taxidpro_webhook_secret }}"
 
 [Install]
 WantedBy=multi-user.target
