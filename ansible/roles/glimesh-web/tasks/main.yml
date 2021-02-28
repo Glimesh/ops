@@ -120,7 +120,6 @@
     dest: /opt/glimesh.tv-old
     links: yes
 
-# Shouldn't we rsync?
 - name: Copy newly built files to new store
   synchronize:
     src: /tmp/glimesh.tv/_build/prod
