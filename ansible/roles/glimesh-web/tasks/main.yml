@@ -43,7 +43,7 @@
 - name: install rebar
   command: mix local.rebar --force
 
-- name: ensure web_build_dir exists
+- name: ensure tmp build dir exists
   file:
     path: /tmp/glimesh.tv
     state: directory
@@ -103,6 +103,13 @@
   environment:
     MIX_ENV: prod
   # when: glimesh.changed
+
+- name: ensure opt host exists
+  file:
+    path: /opt/glimesh.tv
+    state: directory
+    owner: nobody
+    mode: 0755
 
 - name: Ensure deploy state directories exist
   file:
