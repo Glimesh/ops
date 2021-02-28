@@ -45,13 +45,13 @@
 
 - name: ensure web_build_dir exists
   file:
-    path: /tmp/glimesh.tv
+    path: "{{ glimesh_web_build_dir }}"
     state: directory
 
 - name: download glimesh.tv
   git:
     repo: https://github.com/Glimesh/glimesh.tv.git
-    dest: /tmp/glimesh.tv
+    dest: "{{ glimesh_web_build_dir }}"
     recursive: true
     update: true
     force: true
@@ -61,19 +61,19 @@
 - name: register short git hash version
   command: git rev-parse --short HEAD
   args:
-    chdir: /tmp/glimesh.tv
+    chdir: "{{ glimesh_web_build_dir }}"
   register: glimesh_git_hash
 
 - name: change version
   lineinfile:
-    path: /tmp/glimesh.tv/mix.exs
+    path: "{{ glimesh_web_build_dir }}/mix.exs"
     regexp: '^\s+version: .*$'
     line: "version: \"0.1.0+{{ glimesh_git_hash.stdout }}\","
 
 - name: install mix dependencies
   command: mix do deps.get, deps.compile
   args:
-    chdir: /tmp/glimesh.tv
+    chdir: "{{ glimesh_web_build_dir }}"
   environment:
     MIX_ENV: prod
   # when: glimesh.changed
@@ -81,32 +81,32 @@
 - name: install npm asset deps
   command: npm --prefix ./assets ci --progress=false --no-audit --loglevel=error
   args:
-    chdir: /tmp/glimesh.tv
+    chdir: "{{ glimesh_web_build_dir }}"
   # when: glimesh.changed
 
 - name: build static assets
   command: npm run --prefix ./assets deploy
   args:
-    chdir: /tmp/glimesh.tv
+    chdir: "{{ glimesh_web_build_dir }}"
   # when: glimesh.changed
 
 - name: digest static assets
   command: mix phx.digest
   args:
-    chdir: /tmp/glimesh.tv
+    chdir: "{{ glimesh_web_build_dir }}"
   # when: glimesh.changed
 
 - name: build glimesh.tv
   command: mix do compile --force, release --force --overwrite
   args:
-    chdir: /tmp/glimesh.tv
+    chdir: "{{ glimesh_web_build_dir }}"
   environment:
     MIX_ENV: prod
   # when: glimesh.changed
 
 - name: Ensure deploy state directories exist
   file:
-    path: "/opt/glimesh.tv-{{ item }}"
+    path: "{{ glimesh_web_host_dir }}-{{ item }}"
     state: directory
     owner: nobody
     recurse: yes
@@ -116,19 +116,19 @@
 
 - name: Copy currently live files to old directory
   synchronize:
-    src: /opt/glimesh.tv
-    dest: /opt/glimesh.tv-old
+    src: "{{ glimesh_web_host_dir }}"
+    dest: "{{ glimesh_web_host_dir }}-old"
     links: yes
 
 - name: Copy newly built files to new store
   synchronize:
-    src: /tmp/glimesh.tv/_build/prod
-    dest: /opt/glimesh.tv-new
+    src: "{{ glimesh_web_build_dir }}/_build/prod"
+    dest: "{{ glimesh_web_host_dir }}-new"
     links: yes
 
 - name: permissions
   file:
-    path: /opt/glimesh.tv-new
+    path: "{{ glimesh_web_host_dir }}-new"
     owner: nobody
     recurse: yes
 
@@ -150,8 +150,8 @@
 
 - name: Change the symlink
   file:
-    src: /opt/glimesh.tv-new
-    dest: /opt/glimesh.tv
+    src: "{{ glimesh_web_host_dir }}-new"
+    dest: "{{ glimesh_web_host_dir }}"
     state: link
     owner: nobody
     force: yes

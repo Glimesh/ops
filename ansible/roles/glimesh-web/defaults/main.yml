@@ -40,3 +40,6 @@ glimesh_twitter_consumer_key: some_value
 glimesh_twitter_consumer_secret: some_value
 glimesh_twitter_access_token: some_value
 glimesh_twitter_access_secret: some_value
+
+glimesh_web_build_dir: /tmp/glimesh.tv
+glimesh_web_host_dir: /opt/glimesh.tv
