@@ -104,22 +104,6 @@
     MIX_ENV: prod
   # when: glimesh.changed
 
-- name: setup unit file for glimesh.tv
-  template:
-    src: glimesh.service.j2
-    dest: /etc/systemd/system/glimesh.service
-    mode: 644
-  tags: config
-
-- name: reload systemd immediately
-  systemd:
-    daemon_reload: yes
-
-- name: gracefully shut down old glimesh app
-  systemd:
-    name: glimesh
-    state: stopped
-
 - name: Ensure deploy state directories exist
   file:
     path: /opt/glimesh.tv-{{ item }}
@@ -148,6 +132,22 @@
     path: /opt/glimesh.tv-new
     owner: nobody
     recurse: yes
+
+- name: setup unit file for glimesh.tv
+  template:
+    src: glimesh.service.j2
+    dest: /etc/systemd/system/glimesh.service
+    mode: 644
+  tags: config
+
+- name: reload systemd immediately
+  systemd:
+    daemon_reload: yes
+
+- name: gracefully shut down old glimesh app
+  systemd:
+    name: glimesh
+    state: stopped
 
 - name: Change the symlink
   file:
