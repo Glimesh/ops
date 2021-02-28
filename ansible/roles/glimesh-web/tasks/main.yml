@@ -119,12 +119,16 @@
     src: /opt/glimesh.tv
     dest: /opt/glimesh.tv-old
     links: yes
+    delete: yes
+  delegate_to: "{{ inventory_hostname }}"
 
 - name: Copy newly built files to new store
   synchronize:
     src: /tmp/glimesh.tv/_build/prod
     dest: /opt/glimesh.tv-new
     links: yes
+    delete: yes
+  delegate_to: "{{ inventory_hostname }}"
 
 - name: permissions
   file:
