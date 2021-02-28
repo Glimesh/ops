@@ -1,0 +1,27 @@
+- name: web
+  hosts: web
+  serial: 1
+
+  tasks:
+    - name: Change the symlink
+      file:
+        src: /opt/glimesh.tv-old
+        dest: /opt/glimesh.tv
+        state: link
+        owner: nobody
+        force: yes
+
+    - name: restarted glimesh
+      systemd:
+        name: glimesh
+        daemon_reload: yes
+        state: restarted
+
+    - name: wait for service to be online
+      wait_for:
+        port: 8080
+        delay: 5
+
+    - name: pause to make sure the other node can take over
+      pause:
+        seconds: 15
