@@ -106,7 +106,7 @@
 
 - name: Ensure deploy state directories exist
   file:
-    path: /opt/glimesh.tv-{{ item }}
+    path: "/opt/glimesh.tv-{{ item }}"
     state: directory
     owner: nobody
     recurse: yes
