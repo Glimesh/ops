@@ -5,15 +5,15 @@
     name: "{{ inventory_hostname }}"
 
 - name: Ensure .ssh directory exists.
-  file: 
+  file:
     dest: "/root/.ssh"
-    mode: 0700 
-    owner: root 
+    mode: 0700
+    owner: root
     state: directory
 
 - name: Install ssh key
-  copy: 
-    src: "glimesh-deploy" 
+  copy:
+    src: "glimesh-deploy"
     dest: "/root/.ssh/id_rsa"
     mode: 0600
     owner: root
@@ -27,12 +27,12 @@
 
 # - name: install required packages
 #   apt:
-#     pkg: 
-#       - esl-erlang 
-#       - elixir 
-#       - npm 
+#     pkg:
+#       - esl-erlang
+#       - elixir
+#       - npm
 #       - git
-#       - openssl 
+#       - openssl
 #       - imagemagick
 #     state: present
 #     update_cache: yes
@@ -43,8 +43,10 @@
 - name: install rebar
   command: mix local.rebar --force
 
-- name: ensure /tmp/glimesh.tv exists
-  file: path=/tmp/glimesh.tv state=directory
+- name: ensure web_build_dir exists
+  file:
+    path: /tmp/glimesh.tv
+    state: directory
 
 - name: download glimesh.tv
   git:
@@ -62,14 +64,14 @@
     chdir: /tmp/glimesh.tv
   register: glimesh_git_hash
 
-- name: change version 
+- name: change version
   lineinfile:
     path: /tmp/glimesh.tv/mix.exs
     regexp: '^\s+version: .*$'
     line: "version: \"0.1.0+{{ glimesh_git_hash.stdout }}\","
 
 - name: install mix dependencies
-  command: mix do deps.get, deps.compile 
+  command: mix do deps.get, deps.compile
   args:
     chdir: /tmp/glimesh.tv
   environment:
@@ -95,7 +97,7 @@
   # when: glimesh.changed
 
 - name: build glimesh.tv
-  command: mix do compile --force, release --force --overwrite 
+  command: mix do compile --force, release --force --overwrite
   args:
     chdir: /tmp/glimesh.tv
   environment:
@@ -103,7 +105,10 @@
   # when: glimesh.changed
 
 - name: setup unit file for glimesh.tv
-  template: src=glimesh.service.j2 dest=/etc/systemd/system/glimesh.service mode=644
+  template:
+    src: glimesh.service.j2
+    dest: /etc/systemd/system/glimesh.service
+    mode: 644
   tags: config
 
 - name: reload systemd immediately
@@ -111,22 +116,49 @@
     daemon_reload: yes
 
 - name: gracefully shut down old glimesh app
-  systemd: 
+  systemd:
     name: glimesh
     state: stopped
 
-# Copying the file will automatically restart the daemon.
-- name: copy built glimesh.tv
-  command: cp -Rf /tmp/glimesh.tv/_build/prod /opt/glimesh.tv 
+- name: Ensure deploy state directories exist
+  file:
+    path: /opt/glimesh.tv-{{ item }}
+    state: directory
+    owner: nobody
+    recurse: yes
+  with_items:
+    - "old"
+    - "new"
+
+- name: Copy currently live files to old directory
+  synchronize:
+    src: /opt/glimesh.tv
+    dest: /opt/glimesh.tv-old
+    links: yes
+
+# Shouldn't we rsync?
+- name: Copy newly built files to new store
+  synchronize:
+    src: /tmp/glimesh.tv/_build/prod
+    dest: /opt/glimesh.tv-new
+    links: yes
 
 - name: permissions
   file:
-    path: /opt/glimesh.tv
+    path: /opt/glimesh.tv-new
     owner: nobody
     recurse: yes
 
+- name: Change the symlink
+  file:
+    src: /opt/glimesh.tv-new
+    dest: /opt/glimesh.tv
+    state: link
+    owner: nobody
+    force: yes
+
 - name: start new glimesh app
-  systemd: 
+  systemd:
     name: glimesh
     state: started
 
@@ -136,5 +168,5 @@
     delay: 5
 
 - name: pause to make sure the other node can take over
-  pause: 
+  pause:
     seconds: 15
