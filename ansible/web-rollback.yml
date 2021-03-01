@@ -3,15 +3,22 @@
   serial: 1
 
   tasks:
+    - name: Get old deployed hash
+      stat:
+        path: /opt/glimesh.tv-old
+        follow: yes
+        get_checksum: no
+      register: old_deploy
+
     - name: Change the symlink
       file:
-        src: /opt/glimesh.tv-old
+        src: "{{ old_deploy.stat.lnk_target }}"
         dest: /opt/glimesh.tv
         state: link
         owner: nobody
         force: yes
 
-    - name: restarted glimesh
+    - name: restart glimesh
       systemd:
         name: glimesh
         daemon_reload: yes

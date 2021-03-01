@@ -70,6 +70,29 @@
     regexp: '^\s+version: .*$'
     line: "version: \"0.1.0+{{ glimesh_git_hash.stdout }}\","
 
+- set_fact:
+    deploy_dest: "/opt/glimesh.tv-{{ glimesh_git_hash.stdout }}"
+
+## Check we should deploy
+
+- name: Get currently deployed hash
+  stat:
+    path: /opt/glimesh.tv
+    follow: yes
+    get_checksum: no
+  register: current_deploy
+
+- name: Same version deployed?
+  pause:
+    prompt: |
+      WARNING: Latest version is already deployed.
+      Pess Enter to continue
+  delegate_to: localhost
+  when: current_deploy.stat.lnk_target == deploy_dest
+  register: same_deploy
+
+## Build the deploy
+
 - name: install mix dependencies
   command: mix do deps.get, deps.compile
   args:
@@ -104,44 +127,28 @@
     MIX_ENV: prod
   # when: glimesh.changed
 
-- name: ensure opt host exists
+- name: Ensure new directory exists
   file:
-    path: /opt/glimesh.tv
-    state: directory
-    owner: nobody
-    mode: 0755
-
-- name: Ensure deploy state directories exist
-  file:
-    path: "/opt/glimesh.tv-{{ item }}"
+    path: "{{ deploy_dest }}"
     state: directory
     owner: nobody
     recurse: yes
-  with_items:
-    - "old"
-    - "new"
 
-- name: Copy currently live files to old directory
+- name: Copy newly built files to new host
   synchronize:
-    src: /opt/glimesh.tv
-    dest: /opt/glimesh.tv-old
+    src: /tmp/glimesh.tv
+    dest: "{{ deploy_dest }}"
     links: yes
     delete: yes
   delegate_to: "{{ inventory_hostname }}"
 
-- name: Copy newly built files to new store
-  synchronize:
-    src: /tmp/glimesh.tv/_build/prod
-    dest: /opt/glimesh.tv-new
-    links: yes
-    delete: yes
-  delegate_to: "{{ inventory_hostname }}"
-
-- name: permissions
+- name: Check permissions
   file:
-    path: /opt/glimesh.tv-new
+    path: "{{ deploy_dest }}"
     owner: nobody
     recurse: yes
+
+## Change the service
 
 - name: setup unit file for glimesh.tv
   template:
@@ -161,7 +168,7 @@
 
 - name: Change the symlink
   file:
-    src: /opt/glimesh.tv-new
+    src: "{{ deploy_dest }}"
     dest: /opt/glimesh.tv
     state: link
     owner: nobody
@@ -180,3 +187,34 @@
 - name: pause to make sure the other node can take over
   pause:
     seconds: 15
+
+- name: Cleanup old directories
+  block:
+    - name: Add a symlink to the old deploy for ease of rollback
+      file:
+        src: "{{ current_deploy.stat.lnk_target }}"
+        dest: /opt/glimesh.tv-old
+        state: link
+        owner: nobody
+        force: yes
+
+    ## Cleanup
+    - name: Find all deploy folders
+      find:
+        paths: /opt
+        file_type: directory
+        use_regex: yes
+        patterns: "^glimesh.tv-([a-zA-Z0-9]+)$"
+        recurse: no
+      register: all_deploys
+
+    - name: Delete old directories
+      file:
+        path: "{{ item }}"
+        state: absent
+        when: item != current_deploy.stat.lnk_target and item != deploy_dest
+      with_items: "{{ all_deploys.files | map(attribute='path') | list }}"
+
+  when: same_deploy is not defined
+  tags:
+    - cleanup
