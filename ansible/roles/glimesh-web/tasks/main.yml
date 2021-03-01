@@ -78,9 +78,13 @@
 - name: Get currently deployed hash
   stat:
     path: /opt/glimesh.tv
-    follow: yes
+    follow: no
     get_checksum: no
   register: current_deploy
+
+- name: Debug
+  debug:
+    var: current_deploy
 
 - name: Same version deployed?
   pause:
