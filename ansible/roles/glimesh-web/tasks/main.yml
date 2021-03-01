@@ -140,7 +140,7 @@
 
 - name: Copy newly built files to new host
   synchronize:
-    src: /tmp/glimesh.tv
+    src: /tmp/glimesh.tv/_build/prod
     dest: "{{ deploy_dest }}"
     links: yes
     delete: yes
