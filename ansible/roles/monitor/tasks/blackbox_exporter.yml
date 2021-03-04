@@ -1,0 +1,48 @@
+---
+
+- name: Install Blackbox Exporter for Prometheus
+  unarchive:
+    src: "https://github.com/prometheus/blackbox_exporter/releases/download/v{{ blackbox_exporter_version }}/blackbox_exporter-{{ blackbox_exporter_version }}.linux-amd64.tar.gz"
+    dest: /tmp/
+    remote_src: yes
+
+- name: Copy blackbox_exporter to bin
+  copy:
+    src: "/tmp/blackbox_exporter-{{ blackbox_exporter_version }}.linux-amd64/blackbox_exporter"
+    dest: "/usr/local/bin/blackbox_exporter"
+    owner: "{{ prometheus_user_name }}"
+    group: "{{ prometheus_group_name }}"
+    remote_src: yes
+    mode: 0755
+
+- name: Delete blackbox_exporter tmp folder
+  file:
+    path: "/tmp/blackbox_exporter-{{ blackbox_exporter_version }}.linux-amd64"
+    state: absent
+
+- name: Create Config directory
+  file:
+    path: "/etc/blackbox_exporter/"
+    state: directory
+    owner: "{{ prometheus_user_name }}"
+    group: "{{ prometheus_group_name }}"
+    mode: 0755
+
+- name: config file
+  template:
+    src: blackbox_exporter.conf.j2
+    dest: /etc/blackbox_exporter/blackbox_exporter.conf
+
+- name: Create Unit file for blackbox_exporter
+  template: src=blackbox_exporter.service.j2 dest=/etc/systemd/system/blackbox_exporter.service mode=644
+  notify:
+    - reload systemctl
+
+- name: start blackbox_exporter service
+  service: name=blackbox_exporter.service state=restarted enabled=yes
+
+- name: Check if blackbox_exporter is accessible
+  uri:
+    url: http://localhost:9115
+    method: GET
+    status_code: 200

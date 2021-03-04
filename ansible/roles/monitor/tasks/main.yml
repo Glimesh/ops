@@ -6,3 +6,4 @@
 
 - include: grafana.yml
 - include: prometheus.yml
+- include: blackbox_exporter.yml

@@ -16,7 +16,28 @@ scrape_configs:
 {% for host in groups['node_exporter'] %}
 {% if inventory_hostname != host %}
       - targets: ['{{ host }}:9100']
-        labels: 
+        labels:
+          region: {{ hostvars[host].region }}
+          ftl_node_kind: {{ hostvars[host].ftl_node_kind }}
+{% endif %}
+{% endfor %}
+  - job_name: 'janus_http'
+    scrape_interval: 5s
+    metrics_path: /probe
+    params:
+      module: [http_json_200]  # Look for a HTTP 200 with JSON data
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: localhost:9115  # The blackbox exporter's real hostname:port.
+    static_configs:
+{% for host in groups['ftl_edge'] %}
+{% if inventory_hostname != host %}
+      - targets: ['https://{{ host }}/janus/info']
+        labels:
           region: {{ hostvars[host].region }}
           ftl_node_kind: {{ hostvars[host].ftl_node_kind }}
 {% endif %}

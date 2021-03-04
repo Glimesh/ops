@@ -1,0 +1,14 @@
+[Unit]
+Description={{ blackbox_exporter_service_name }}
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User={{ prometheus_user_name }}
+Group={{ prometheus_group_name }}
+Restart=on-abnormal
+Type=simple
+ExecStart=/usr/local/bin/blackbox_exporter --config.file=/etc/blackbox_exporter/blackbox_exporter.conf --web.listen-address="localhost:9115"
+
+[Install]
+WantedBy=multi-user.target
