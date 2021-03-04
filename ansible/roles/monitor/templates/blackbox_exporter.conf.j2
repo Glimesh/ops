@@ -1,0 +1,30 @@
+modules:
+
+  http_2xx:
+    prober: http
+
+  http_json_200:
+    timeout: 5s
+    prober: http
+    http:
+      valid_status_codes: [200]
+      method: GET
+      # Don't follow redirect
+      no_follow_redirects: true
+      headers:
+        Accept: "application/json"
+      fail_if_header_not_matches:
+        - header: "Content-Type"
+          regexp: "application/json"
+
+  tcp_connect:
+    prober: tcp
+
+  ssh_banner:
+    prober: tcp
+    tcp:
+      query_response:
+      - expect: "^SSH-2.0-"
+
+  icmp:
+    prober: icmp

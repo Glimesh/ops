@@ -4,3 +4,6 @@ prometheus_service_name: prometheus
 prometheus_user_name: prometheus
 prometheus_group_name: prometheus
 prometheus_version: "2.23.0"
+
+blackbox_exporter_service_name: blackbox_exporter
+blackbox_exporter_version: "0.18.0"
