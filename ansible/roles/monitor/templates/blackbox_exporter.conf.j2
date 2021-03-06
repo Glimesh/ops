@@ -17,6 +17,14 @@ modules:
         - header: "Content-Type"
           regexp: "application/json"
 
+  ftl_ping:
+    timeout: 5s
+    prober: tcp
+    tcp:
+      query_response:
+        - send: "PING\r\n\r\n"
+        - expect: "^201$"
+
   tcp_connect:
     prober: tcp
 
@@ -24,7 +32,7 @@ modules:
     prober: tcp
     tcp:
       query_response:
-      - expect: "^SSH-2.0-"
+        - expect: "^SSH-2.0-"
 
   icmp:
     prober: icmp
