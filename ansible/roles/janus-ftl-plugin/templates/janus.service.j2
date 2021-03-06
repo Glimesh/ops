@@ -6,8 +6,14 @@ After=syslog.target network.target
 [Service]
 User=root
 Nice=1
+Type=notify
 Restart=on-abnormal
 RestartSec=10
+# How long systemd will wait for the service to signal "start-up completion"
+TimeoutStartSec=30s
+# Max time systemd will wait between service keepalive pings
+WatchdogSec=10s
+NotifyAccess=exec
 LimitNOFILE=65536
 ExecStart=/opt/janus/bin/janus -o
 
