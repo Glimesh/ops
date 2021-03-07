@@ -7,15 +7,18 @@ After=syslog.target network.target
 User=root
 Nice=1
 Type=notify
-Restart=on-abnormal
+Restart=on-failure
 RestartSec=10
 # How long systemd will wait for the service to signal "start-up completion"
 TimeoutStartSec=30s
 # Max time systemd will wait between service keepalive pings
-WatchdogSec=10s
+WatchdogSec=60s
 NotifyAccess=exec
 LimitNOFILE=65536
 ExecStart=/opt/janus/bin/janus -o
+StartLimitInterval=5min
+StartLimitBurst=4
+StartLimitAction=reboot-force
 
 Environment="FTL_NODE_KIND={{ ftl_node_kind }}"
 
