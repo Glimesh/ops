@@ -17,6 +17,7 @@
       - libcurl4-openssl-dev 
       - liblua5.3-dev 
       - libconfig-dev 
+      - libsystemd-dev
       - pkg-config 
       - gengetopt 
       - libtool 
