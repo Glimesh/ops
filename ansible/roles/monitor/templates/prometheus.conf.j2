@@ -15,10 +15,10 @@ scrape_configs:
     scrape_interval: 5s
     static_configs:
 {% for host in groups['node_exporter'] %}
-{% if inventory_hostname != host %}
       - targets: ['{{ host }}:9100']
         labels:
           region: {{ hostvars[host].region }}
+{%- if hostvars[host].ftl_node_kind is defined %}
           ftl_node_kind: {{ hostvars[host].ftl_node_kind }}
 {% endif %}
 {% endfor %}

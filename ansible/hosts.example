@@ -30,6 +30,7 @@ some-orchestrator-server
 monitoring-server
 
 [node_exporter:children]
+monitor
 ftl
 
 [all:vars]
