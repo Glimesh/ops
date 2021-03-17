@@ -216,7 +216,7 @@
       file:
         path: "{{ item }}"
         state: absent
-        when: item != current_deploy.stat.lnk_target and item != deploy_dest
+      when: item != current_deploy.stat.lnk_target and item != deploy_dest
       with_items: "{{ all_deploys.files | map(attribute='path') | list }}"
 
   when: same_deploy is not defined
