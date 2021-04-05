@@ -82,17 +82,13 @@
     get_checksum: no
   register: current_deploy
 
-- name: Debug
-  debug:
-    var: current_deploy
-
 - name: Same version deployed?
   pause:
     prompt: |
       WARNING: Latest version is already deployed.
       Pess Enter to continue
   delegate_to: localhost
-  when: current_deploy.stat.lnk_target == deploy_dest
+  when: current_deploy.stat.exists and current_deploy.stat.lnk_target == deploy_dest
   register: same_deploy
 
 ## Build the deploy
@@ -103,7 +99,6 @@
     chdir: /tmp/glimesh.tv
   environment:
     MIX_ENV: prod
-  # when: glimesh.changed
 
 - name: install npm asset deps
   command: npm --prefix ./assets ci --progress=false --no-audit --loglevel=error
@@ -192,17 +187,31 @@
   pause:
     seconds: 15
 
+- name: Add a symlink to the old deploy for ease of rollback
+  file:
+    src: "{{ current_deploy.stat.lnk_target }}"
+    dest: /opt/glimesh.tv-old
+    state: link
+    owner: nobody
+    force: yes
+
 - name: Cleanup old directories
   block:
-    - name: Add a symlink to the old deploy for ease of rollback
-      file:
-        src: "{{ current_deploy.stat.lnk_target }}"
-        dest: /opt/glimesh.tv-old
-        state: link
-        owner: nobody
-        force: yes
+    - name: Get currently deployed dest
+      stat:
+        path: /opt/glimesh.tv
+        follow: no
+        get_checksum: no
+      register: gtv_current
 
-    ## Cleanup
+    - name: Get old deployed dest
+      stat:
+        path: /opt/glimesh.tv-old
+        follow: no
+        get_checksum: no
+      register: gtv_old
+
+    # Cleanup
     - name: Find all deploy folders
       find:
         paths: /opt
@@ -216,9 +225,11 @@
       file:
         path: "{{ item }}"
         state: absent
-      when: item != current_deploy.stat.lnk_target and item != deploy_dest
+      when:
+        - item != '/opt/glimesh.tv-old'
+        - gtv_current.stat.exists == False or item != gtv_current.stat.lnk_target
+        - gtv_old.stat.exists == False or item != gtv_old.stat.lnk_target
       with_items: "{{ all_deploys.files | map(attribute='path') | list }}"
 
-  when: same_deploy is not defined
   tags:
     - cleanup

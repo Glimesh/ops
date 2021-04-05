@@ -6,7 +6,7 @@
     - name: Get old deployed hash
       stat:
         path: /opt/glimesh.tv-old
-        follow: yes
+        follow: no
         get_checksum: no
       register: old_deploy
 
