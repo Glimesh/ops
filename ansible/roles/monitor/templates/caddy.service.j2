@@ -1,0 +1,23 @@
+[Unit]
+Description=Caddy
+Documentation=https://caddyserver.com/docs/
+After=network.target network-online.target
+Requires=network-online.target
+
+[Service]
+# Needs 2.4.0 and above, ish.
+# https://caddy.community/t/cannot-start-caddy-as-a-service-with-systemd-ubuntu-20-04-github/12107/3
+#Type=notify
+User={{ caddy_user_name }}
+Group={{ caddy_group_name }}
+ExecStart=/usr/local/bin/caddy run --environ --config /etc/caddy/Caddyfile
+ExecReload=/usr/local/bin/caddy reload --config /etc/caddy/Caddyfile
+TimeoutStopSec=5s
+LimitNOFILE=1048576
+LimitNPROC=512
+PrivateTmp=true
+ProtectSystem=full
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target
