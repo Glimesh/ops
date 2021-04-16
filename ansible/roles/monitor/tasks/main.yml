@@ -5,5 +5,9 @@
     name: "{{ inventory_hostname }}"
 
 - include: grafana.yml
+  become: yes
+  tags:
+    - grafana
+
 - include: prometheus.yml
 - include: blackbox_exporter.yml

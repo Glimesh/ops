@@ -1,5 +1,7 @@
 ---
 
+grafana_version: "7.5.4"
+
 prometheus_service_name: prometheus
 prometheus_user_name: prometheus
 prometheus_group_name: prometheus
