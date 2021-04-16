@@ -10,4 +10,8 @@
     - grafana
 
 - include: prometheus.yml
+  become: yes
+  tags:
+    - prometheus
+
 - include: blackbox_exporter.yml
