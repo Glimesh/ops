@@ -11,4 +11,7 @@ prometheus_version: "2.26.0"
 prometheus_force_install: false
 
 blackbox_exporter_service_name: blackbox_exporter
+blackbox_exporter_user_name: blackbox_exporter
+blackbox_exporter_group_name: blackbox_exporter
 blackbox_exporter_version: "0.18.0"
+blackbox_exporter_force_install: false

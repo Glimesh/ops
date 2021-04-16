@@ -15,3 +15,6 @@
     - prometheus
 
 - include: blackbox_exporter.yml
+  become: yes
+  tags:
+    - blackbox_exporter

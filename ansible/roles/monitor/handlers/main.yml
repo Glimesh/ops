@@ -1,8 +1,5 @@
 ---
 
-- name: reload systemctl
-  command: systemctl daemon-reload
-
 - name: restart grafana
   systemd:
     name: grafana-server
@@ -18,4 +15,5 @@
 - name: restart blackbox_exporter
   systemd:
     name: blackbox_exporter
+    daemon_reload: yes
     state: restarted
