@@ -1,10 +1,3 @@
-variable "ftl_ingest_count" {
-  type = number
-}
-
-variable "ftl_edge_count" {
-  type = number
-}
 
 variable "ftl_orchestrator_hostname" {
   type = string
@@ -53,3 +46,4 @@ variable "cloudflare_domain" {
 variable "uptimerobot_api_key" {
   type = string
 }
+

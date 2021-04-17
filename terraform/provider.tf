@@ -2,11 +2,11 @@ terraform {
   required_providers {
     cloudflare = {
       source  = "cloudflare/cloudflare"
-      version = "2.14.0"
+      version = "2.18.0"
     }
     digitalocean = {
       source  = "digitalocean/digitalocean"
-      version = "2.3.0"
+      version = "2.5.1"
     }
     uptimerobot = {
       source  = "louy/uptimerobot"
@@ -15,6 +15,7 @@ terraform {
   }
 }
 
+# # Default Region is NYC3 for us
 provider "digitalocean" {
   token = var.digitalocean_token
 }
@@ -26,3 +27,4 @@ provider "cloudflare" {
 provider "uptimerobot" {
   api_key = var.uptimerobot_api_key
 }
+
