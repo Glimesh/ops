@@ -38,6 +38,42 @@
   pip:
     name: meson
 
+# System Configuration
+- name: set net.core.rmem_default
+  sysctl:
+    name: net.core.rmem_default
+    value: '1048576'
+  tags: 
+    - system_config
+
+- name: set net.core.wmem_default
+  sysctl:
+    name: net.core.wmem_default
+    value: '1048576'
+  tags: 
+    - system_config
+
+- name: set net.core.rmem_max
+  sysctl:
+    name: net.core.rmem_max
+    value: '1048576'
+  tags: 
+    - system_config
+
+- name: set net.core.wmem_max
+  sysctl:
+    name: net.core.wmem_max
+    value: '1048576'
+  tags: 
+    - system_config
+
+- name: set kernel.core_pattern
+  sysctl:
+    name: kernel.core_pattern
+    value: 'core.%e.%p.%t'
+  tags: 
+    - system_config
+
 # libnice
 - name: ensure /tmp/libnice exists
   file: path=/tmp/libnice state=directory

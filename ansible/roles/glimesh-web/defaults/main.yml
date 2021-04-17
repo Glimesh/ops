@@ -40,3 +40,5 @@ glimesh_twitter_consumer_key: some_value
 glimesh_twitter_consumer_secret: some_value
 glimesh_twitter_access_token: some_value
 glimesh_twitter_access_secret: some_value
+
+glimesh_start_workers: false
