@@ -18,7 +18,7 @@ scrape_configs:
       - targets: ['{{ host }}:9100']
         labels:
           region: {{ hostvars[host].region }}
-{%- if hostvars[host].ftl_node_kind is defined %}
+{% if hostvars[host].ftl_node_kind is defined %}
           ftl_node_kind: {{ hostvars[host].ftl_node_kind }}
 {% endif %}
 {% endfor %}

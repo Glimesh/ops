@@ -181,7 +181,17 @@
     target: install
   when: janus.changed
 
+- name: remove un-necessary janus plugins (all of them)
+  file:
+    state: absent
+    path: "/opt/janus/lib/janus/plugins"
+
 # janus-ftl-plugin
+- name: Cleanup old directory
+  file:
+    path: "/tmp/janus-ftl-plugin"
+    state: absent
+
 - name: ensure /tmp/janus-ftl-plugin exists
   file: path=/tmp/janus-ftl-plugin state=directory
 
