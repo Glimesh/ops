@@ -1,0 +1,15 @@
+# Configure a single site with the hostname of the instance
+{{ inventory_hostname }} {
+        import default_settings
+
+        handle /metrics {
+            metrics /metrics
+        }
+
+        handle /healthcheck {
+            respond "Everything is 200 OK"
+        }
+
+        # Catchall "there is nothing here"
+        respond /* 204
+}

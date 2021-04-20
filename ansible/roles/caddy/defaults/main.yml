@@ -1,0 +1,11 @@
+---
+
+letsencrypt_email: certs@example.com
+
+caddy_version: "2.3.0"
+caddy_conf_dir: "/etc/caddy"
+caddy_sites_dir: "{{ caddy_conf_dir }}/sites.d"
+caddy_snippets_dir: "{{ caddy_conf_dir }}/snippets.d"
+
+
+create_hostname_site: yes

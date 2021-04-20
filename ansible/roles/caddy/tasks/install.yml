@@ -1,0 +1,89 @@
+---
+
+- name: Install caddy
+  apt:
+    deb: "https://github.com/caddyserver/caddy/releases/download/v{{ caddy_version }}/caddy_{{ caddy_version }}_linux_amd64.deb"
+    # Needed if you wanted to downgrade
+    #force: yes
+  notify:
+    # The deb technically already restarts grafanacaddy and triggers the systemd reload
+    - restart caddy
+
+- name: Creates Caddy sites directory
+  file:
+    path: "{{ caddy_sites_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Creates Caddy snippets directory
+  file:
+    path: "{{ caddy_snippets_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Caddy main config file
+  template:
+    src: Caddyfile.j2
+    dest: "{{ caddy_conf_dir }}/Caddyfile"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - validate caddy config
+    - restart caddy
+
+- name: Add Caddy snippets
+  copy:
+    src: "{{ item }}"
+    dest: "{{ caddy_snippets_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - secure.conf
+  notify:
+    - validate caddy config
+    - restart caddy
+
+- name: Configure site for {{ inventory_hostname }}
+  template:
+    src: hostname.site.conf.j2
+    dest: "{{ caddy_sites_dir }}/hostname.conf"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - validate caddy config
+    - restart caddy
+  when: create_hostname_site
+
+##
+- name: Configure site for {{ inventory_hostname }}
+  template:
+    src: prometheus.conf.j2
+    dest: "{{ caddy_sites_dir }}/prometheus.conf"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - validate caddy config
+    - restart caddy
+##
+
+
+# Trigger systemctl reload/restart if needed
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: start caddy service
+  service: name=caddy.service state=started enabled=yes
+
+- name: Check if caddy is accessible
+  uri:
+    url: https://{{ inventory_hostname }}/
+    method: GET
+    status_code: 204

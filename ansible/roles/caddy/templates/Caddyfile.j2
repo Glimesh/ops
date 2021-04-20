@@ -1,0 +1,16 @@
+# Global options
+{
+        email {{ letsencrypt_email }}
+}
+
+# Some sane defaults we can reuse
+(default_settings) {
+        encode zstd gzip
+        log {
+                output stderr
+        }
+}
+
+# Load in any extra configured sites
+import {{ caddy_snippets_dir }}/*.conf
+import {{ caddy_sites_dir }}/*.conf

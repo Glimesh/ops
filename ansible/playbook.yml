@@ -30,5 +30,6 @@
 - name: monitoring server
   hosts: monitor
   roles:
+    - caddy
     - monitor
     - prometheus-node-exporter
