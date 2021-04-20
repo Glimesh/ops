@@ -6,7 +6,7 @@
     # Needed if you wanted to downgrade
     #force: yes
   notify:
-    # The deb technically already restarts grafanacaddy and triggers the systemd reload
+    # The deb technically already restarts caddy and triggers the systemd reload
     - restart caddy
 
 - name: Creates Caddy sites directory
@@ -60,20 +60,6 @@
     - validate caddy config
     - restart caddy
   when: create_hostname_site
-
-##
-- name: Configure site for {{ inventory_hostname }}
-  template:
-    src: prometheus.conf.j2
-    dest: "{{ caddy_sites_dir }}/prometheus.conf"
-    owner: root
-    group: root
-    mode: 0644
-  notify:
-    - validate caddy config
-    - restart caddy
-##
-
 
 # Trigger systemctl reload/restart if needed
 - name: Flush handlers
