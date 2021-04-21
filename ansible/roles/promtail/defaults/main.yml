@@ -3,8 +3,6 @@
 local_bin_path: "/usr/local/bin"
 
 promtail_service_name: promtail
-promtail_user_name: promtail
-promtail_group_name: promtail
 promtail_version: "2.2.1"
 promtail_force_install: false
 

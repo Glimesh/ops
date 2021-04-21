@@ -7,36 +7,21 @@
     state: present
     update_cache: yes
 
-- name: Creating promtail group
-  group:
-    name: "{{ promtail_group_name }}"
-    system: yes
-
-- name: Creating promtail user
-  user:
-    name: "{{ promtail_user_name }}"
-    group: "{{ promtail_group_name }}"
-    system: yes
-    shell: "/sbin/nologin"
-    comment: "{{ promtail_user_name }} nologin User"
-    createhome: no
-    home: "/data/promtail/"
-
 - name: Creates promtail data directory
   file:
     path: "/data/promtail/"
     state: directory
-    owner: "{{ promtail_user_name }}"
-    group: "{{ promtail_group_name }}"
-    mode: 0755
+    owner: root
+    group: root
+    mode: 0750
 
 - name: Creates promtail config directory
   file:
     path: "/etc/promtail/"
     state: directory
     owner: root
-    group: "{{ promtail_group_name }}"
-    mode: 0770
+    group: root
+    mode: 0750
 
 - name: Get current promtail version
   command: "{{ local_bin_path }}/promtail -version"
@@ -66,10 +51,10 @@
       copy:
         src: "/tmp/promtail-linux-amd64"
         dest: "{{ local_bin_path }}/promtail"
-        owner: "{{ promtail_user_name }}"
-        group: "{{ promtail_group_name }}"
+        owner: root
+        group: root
         remote_src: yes
-        mode: 0755
+        mode: 0750
       notify:
         - restart promtail
 
@@ -77,6 +62,9 @@
   template:
     src: promtail.yaml.j2
     dest: /etc/promtail/promtail.yaml
+    owner: root
+    group: root
+    mode: 0640
   notify:
     - restart promtail
 
