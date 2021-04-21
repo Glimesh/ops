@@ -106,3 +106,15 @@
     url: http://localhost:9090
     method: GET
     status_code: 200
+
+- name: configure prometheus for grafana
+  include: grafana_add_datasource.yml
+  vars:
+    t_grafana_dashboard_name: Prometheus
+    t_grafana_dashboard_type: prometheus
+    t_grafana_dashboard_url: "http://localhost:9090"
+    t_grafana_dashboard_http_method: "POST"
+    t_grafana_dashboard_uid: "glim-prometheus"
+    t_grafana_dashboard_is_default: true
+  tags:
+    - grafana

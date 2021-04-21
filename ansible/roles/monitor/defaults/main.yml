@@ -1,6 +1,7 @@
 ---
 
 grafana_version: "7.5.4"
+grafana_conf_dir: "/etc/grafana"
 
 local_bin_path: "/usr/local/bin"
 

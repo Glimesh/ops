@@ -1,0 +1,29 @@
+# config file version
+apiVersion: {{ t_grafana_dashboard_version | default("1") }}
+
+# list of datasources to insert/update depending
+# what's available in the database
+datasources:
+  # <string, required> name of the datasource. Required
+  - name: {{ t_grafana_dashboard_name }}
+    # <string, required> datasource type. Required
+    type: {{ t_grafana_dashboard_type }}
+    # <string, required> access mode. proxy or direct (Server or Browser in the UI). Required
+    access: proxy
+
+    # <string> custom UID which can be used to reference this datasource in other parts of the configuration, if not specified will be generated automatically
+    uid: {{ t_grafana_dashboard_uid }}
+    # <string> url
+    url: {{ t_grafana_dashboard_url }}
+
+    # <bool> mark as default datasource. Max one per org
+    isDefault: {{ t_grafana_dashboard_is_default | default(false) | string | lower }}
+    # <map> fields that will be converted to json and stored in jsonData
+    jsonData:
+{% if t_grafana_dashboard_http_method is defined %}
+      httpMethod: "{{ t_grafana_dashboard_http_method }}"
+{% endif %}
+
+    version: 1
+    # <bool> allow users to edit datasources from the UI.
+    editable: false
