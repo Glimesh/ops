@@ -1,0 +1,14 @@
+[Unit]
+Description={{ loki_service_name }}
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User={{ loki_user_name }}
+Group={{ loki_group_name }}
+Restart=on-abnormal
+Type=simple
+ExecStart=/usr/local/bin/loki --config.file=/etc/loki/loki.yaml
+
+[Install]
+WantedBy=multi-user.target

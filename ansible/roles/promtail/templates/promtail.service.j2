@@ -1,0 +1,14 @@
+[Unit]
+Description={{ promtail_service_name }}
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User={{ promtail_user_name }}
+Group={{ promtail_group_name }}
+Restart=on-abnormal
+Type=simple
+ExecStart=/usr/local/bin/promtail --config.file=/etc/promtail/promtail.yaml
+
+[Install]
+WantedBy=multi-user.target
