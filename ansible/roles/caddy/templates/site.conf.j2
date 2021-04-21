@@ -1,0 +1,17 @@
+# Caddy Ansible role configuration for {{ t_caddy_site_name }}
+{{ t_caddy_site_host }} {
+{% if t_caddy_site_default_settings is defined and t_caddy_site_default_settings %}
+        import default_settings
+{% endif %}
+{% if t_caddy_site_secure_headers is defined and t_caddy_site_secure_headers %}
+        import secure_headers
+{% endif %}
+{% if t_caddy_site_reverse_proxy is defined %}
+        reverse_proxy {{ t_caddy_site_reverse_proxy }}
+{% endif %}
+
+{%- if t_caddy_site_extra_conf is defined %}
+
+        {{ t_caddy_site_extra_conf|indent(8) }}
+{% endif %}
+}

@@ -1,0 +1,36 @@
+---
+
+# Vars to set when calling this task (eg. via include_role):
+#
+#  include_role:
+#    name: caddy
+#    apply:
+#      tags:
+#        - caddy
+#    tasks_from: add_site
+#    public: no
+#  vars:
+#    t_caddy_site_name: service_name
+#    t_caddy_site_host: "service.{{ inventory_hostname }}"
+#    t_caddy_site_default_settings: true
+#    t_caddy_site_secure_headers: true
+#    t_caddy_site_reverse_proxy: "localhost:80"
+#    t_caddy_site_extra_conf: |
+#      handle /metrics {
+#          metrics /metrics
+#      }
+#  tags:
+#    - caddy
+
+- name: Configure caddy site for {{ t_caddy_site_host }}
+  template:
+    src: site.conf.j2
+    dest: "{{ caddy_sites_dir }}/{{ t_caddy_site_name }}.conf"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - validate caddy config
+    - restart caddy
+  tags:
+    - caddy

@@ -49,16 +49,23 @@
     - validate caddy config
     - restart caddy
 
-- name: Configure site for {{ inventory_hostname }}
-  template:
-    src: hostname.site.conf.j2
-    dest: "{{ caddy_sites_dir }}/hostname.conf"
-    owner: root
-    group: root
-    mode: 0644
-  notify:
-    - validate caddy config
-    - restart caddy
+- name: Add default caddy hostname site
+  include: add_site.yml
+  vars:
+    t_caddy_site_name: hostname
+    t_caddy_site_host: "{{ inventory_hostname }}"
+    t_caddy_site_default_settings: true
+    t_caddy_site_extra_conf: |
+      handle /metrics {
+          metrics /metrics
+      }
+
+      handle /healthcheck {
+          respond "Everything is 200 OK"
+      }
+
+      # Catchall "there is nothing here"
+      respond /* 204
   when: create_hostname_site
 
 # Trigger systemctl reload/restart if needed
@@ -72,4 +79,9 @@
   uri:
     url: https://{{ inventory_hostname }}/
     method: GET
-    status_code: 204
+  register: _result
+  until: _result.status == 204
+  retries: 12 # 12 * 5 seconds = 1 minute
+  delay: 5 # Every 5 seconds
+  when: create_hostname_site and not acme_staging
+
