@@ -23,3 +23,20 @@
     url: http://{{ inventory_hostname }}:3000
     method: GET
     status_code: 200
+
+- name: configure caddy for grafana
+  include_role:
+    name: caddy
+    apply:
+      tags:
+        - caddy
+    tasks_from: add_site
+    public: no
+  vars:
+    t_caddy_site_name: grafana
+    t_caddy_site_host: "grafana.{{ inventory_hostname }}"
+    t_caddy_site_default_settings: true
+    t_caddy_site_secure_headers: true
+    t_caddy_site_reverse_proxy: "localhost:3000"
+  tags:
+    - caddy
