@@ -1,8 +1,9 @@
 ---
 
-- name: Creating prometheus user group
-  group: name="{{ prometheus_group_name }}"
-  become: true
+- name: Creating prometheus group
+  group:
+    name: "{{ prometheus_group_name }}"
+    system: yes
 
 - name: Creating prometheus user
   user:
@@ -11,60 +12,109 @@
     system: yes
     shell: "/sbin/nologin"
     comment: "{{ prometheus_user_name }} nologin User"
-    createhome: "no"
-    state: present
+    createhome: no
+    home: "/data/prometheus/"
 
-- name: Install prometheus
-  unarchive:
-    src: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
-    dest: /tmp/
-    remote_src: yes
-
-- name: Copy prometheus file to bin
-  copy:
-    src: "/tmp/prometheus-{{ prometheus_version }}.linux-amd64/prometheus"
-    dest: "/usr/local/bin/prometheus"
-    owner: "{{ prometheus_user_name }}"
-    group: "{{ prometheus_group_name }}"
-    remote_src: yes
-    mode: 0755
-
-- name: Delete prometheus tmp folder
+- name: Creates prometheus data directory
   file:
-    path: "/tmp/prometheus-{{ prometheus_version }}.linux-amd64"
-    state: absent
-
-- name: Creates directory
-  file: 
     path: "/data/prometheus/"
     state: directory
     owner: "{{ prometheus_user_name }}"
     group: "{{ prometheus_group_name }}"
     mode: 0755
 
-- name: Creates directory
-  file: 
+- name: Creates prometheus config directory
+  file:
     path: "/etc/prometheus/"
     state: directory
-    owner: "{{ prometheus_user_name }}"
+    owner: root
     group: "{{ prometheus_group_name }}"
-    mode: 0755
+    mode: 0770
 
-- name: config file
+- name: Get current prometheus version
+  command: "{{ local_bin_path }}/prometheus --version"
+  check_mode: no
+  changed_when: false
+  failed_when: false
+  register: __prometheus_version
+
+- name: Determine whether we need to install prometheus
+  set_fact:
+    # if the version command failed, OR the parsed version did not match, then we install
+    _install_prometheus: "{% if __prometheus_version.rc != 0 or __prometheus_version.stdout_lines[0].split(' ')[2] != prometheus_version %}true{% else %}false{% endif %}"
+  when: __prometheus_version.stdout_lines
+
+# Pre 2.26.0, the version info was to stderr... This block can be removed after infra upgrades
+- name: Determine whether we need to install prometheus
+  set_fact:
+    # if the version command failed, OR the parsed version did not match, then we install
+    _install_prometheus: "{% if __prometheus_version.rc != 0 or __prometheus_version.stderr_lines[0].split(' ')[2] != prometheus_version %}true{% else %}false{% endif %}"
+  when: __prometheus_version.stderr_lines
+
+- name: Install prometheus
+  when: _install_prometheus or prometheus_force_install
+  block:
+    - name: Download prometheus
+      become: no
+      unarchive:
+        src: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Copy prometheus/promtool file to bin
+      # Skip this when in --check mode as the download would have been skipped
+      when: not ansible_check_mode
+      copy:
+        src: "/tmp/prometheus-{{ prometheus_version }}.linux-amd64/{{ item }}"
+        dest: "{{ local_bin_path }}/{{ item }}"
+        owner: "{{ prometheus_user_name }}"
+        group: "{{ prometheus_group_name }}"
+        remote_src: yes
+        mode: 0755
+      with_items:
+        - prometheus
+        - promtool
+      notify:
+        - restart prometheus
+
+    - name: Delete prometheus tmp folder
+      file:
+        path: "/tmp/prometheus-{{ prometheus_version }}.linux-amd64"
+        state: absent
+
+- name: prometheus config file
   template:
     src: prometheus.conf.j2
     dest: /etc/prometheus/prometheus.conf
+  notify:
+    - restart prometheus
 
 - name: Create Unit file for prometheus
   template: src=prometheus.service.j2 dest=/etc/systemd/system/prometheus.service mode=644
   notify:
-    - reload systemctl
+    - restart prometheus
+
+# Trigger systemctl reload/restart if needed
+- name: Flush handlers
+  meta: flush_handlers
 
 - name: start prometheus service
-  service: name=prometheus.service state=restarted enabled=yes
+  service: name=prometheus.service state=started enabled=yes
 
 - name: Check if prometheus is accessible
   uri:
     url: http://localhost:9090
     method: GET
     status_code: 200
+
+- name: configure prometheus for grafana
+  include: grafana_add_datasource.yml
+  vars:
+    t_grafana_dashboard_name: Prometheus
+    t_grafana_dashboard_type: prometheus
+    t_grafana_dashboard_url: "http://localhost:9090"
+    t_grafana_dashboard_http_method: "POST"
+    t_grafana_dashboard_uid: "glim-prometheus"
+    t_grafana_dashboard_is_default: true
+  tags:
+    - grafana

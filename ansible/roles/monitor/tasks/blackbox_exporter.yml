@@ -1,45 +1,87 @@
 ---
 
-- name: Install Blackbox Exporter for Prometheus
-  unarchive:
-    src: "https://github.com/prometheus/blackbox_exporter/releases/download/v{{ blackbox_exporter_version }}/blackbox_exporter-{{ blackbox_exporter_version }}.linux-amd64.tar.gz"
-    dest: /tmp/
-    remote_src: yes
+- name: Creating blackbox_exporter group
+  group:
+    name: "{{ blackbox_exporter_group_name }}"
+    system: yes
 
-- name: Copy blackbox_exporter to bin
-  copy:
-    src: "/tmp/blackbox_exporter-{{ blackbox_exporter_version }}.linux-amd64/blackbox_exporter"
-    dest: "/usr/local/bin/blackbox_exporter"
-    owner: "{{ prometheus_user_name }}"
-    group: "{{ prometheus_group_name }}"
-    remote_src: yes
-    mode: 0755
+- name: Creating blackbox_exporter user
+  user:
+    name: "{{ blackbox_exporter_user_name }}"
+    group: "{{ blackbox_exporter_group_name }}"
+    system: yes
+    shell: "/sbin/nologin"
+    comment: "{{ blackbox_exporter_user_name }} nologin User"
+    createhome: no
 
-- name: Delete blackbox_exporter tmp folder
-  file:
-    path: "/tmp/blackbox_exporter-{{ blackbox_exporter_version }}.linux-amd64"
-    state: absent
-
-- name: Create Config directory
+- name: Creates blackbox_exporter config directory
   file:
     path: "/etc/blackbox_exporter/"
     state: directory
-    owner: "{{ prometheus_user_name }}"
-    group: "{{ prometheus_group_name }}"
-    mode: 0755
+    owner: root
+    group: "{{ blackbox_exporter_group_name }}"
+    mode: 0770
 
-- name: config file
+- name: Get current blackbox_exporter version
+  command: "{{ local_bin_path }}/blackbox_exporter --version"
+  check_mode: no
+  changed_when: false
+  failed_when: false
+  register: __blackbox_exporter_version
+
+- name: Determine whether we need to install blackbox_exporter
+  set_fact:
+    # if the version command failed, OR the parsed version did not match, then we install
+    # 2021 April Note: 0.18.0 sends version to stderr_lines. Future versions may behave like prometheus and use stdout
+    # eg. node_exporter https://github.com/prometheus/node_exporter/issues/1271
+    _install_blackbox_exporter: "{% if __blackbox_exporter_version.rc != 0 or __blackbox_exporter_version.stderr_lines[0].split(' ')[2] != blackbox_exporter_version %}true{% else %}false{% endif %}"
+
+- name: Install blackbox_exporter
+  when: _install_blackbox_exporter or blackbox_exporter_force_install
+  block:
+    - name: Download blackbox_exporter
+      become: no
+      unarchive:
+        src: "https://github.com/prometheus/blackbox_exporter/releases/download/v{{ blackbox_exporter_version }}/blackbox_exporter-{{ blackbox_exporter_version }}.linux-amd64.tar.gz"
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Copy blackbox_exporter file to bin
+      # Skip this when in --check mode as the download would have been skipped
+      when: not ansible_check_mode
+      copy:
+        src: "/tmp/blackbox_exporter-{{ blackbox_exporter_version }}.linux-amd64/blackbox_exporter"
+        dest: "{{ local_bin_path }}/blackbox_exporter"
+        owner: "{{ blackbox_exporter_user_name }}"
+        group: "{{ blackbox_exporter_group_name }}"
+        remote_src: yes
+        mode: 0755
+      notify:
+        - restart blackbox_exporter
+
+    - name: Delete blackbox_exporter tmp folder
+      file:
+        path: "/tmp/blackbox_exporter-{{ blackbox_exporter_version }}.linux-amd64"
+        state: absent
+
+- name: blackbox_exporter config file
   template:
     src: blackbox_exporter.conf.j2
     dest: /etc/blackbox_exporter/blackbox_exporter.conf
+  notify:
+    - restart blackbox_exporter
 
 - name: Create Unit file for blackbox_exporter
   template: src=blackbox_exporter.service.j2 dest=/etc/systemd/system/blackbox_exporter.service mode=644
   notify:
-    - reload systemctl
+    - restart blackbox_exporter
+
+# Trigger systemctl reload/restart if needed
+- name: Flush handlers
+  meta: flush_handlers
 
 - name: start blackbox_exporter service
-  service: name=blackbox_exporter.service state=restarted enabled=yes
+  service: name=blackbox_exporter.service state=started enabled=yes
 
 - name: Check if blackbox_exporter is accessible
   uri:

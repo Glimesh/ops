@@ -1,0 +1,33 @@
+---
+
+# Vars to set when calling this task (eg. via include_role):
+#
+#  include_role:
+#    name: monitor
+#    apply:
+#      tags:
+#        - grafana
+#    tasks_from: grafana_add_datasource
+#    public: no
+#  vars:
+#    t_grafana_dashboard_version: 1
+#    t_grafana_dashboard_name: Prometheus
+#    t_grafana_dashboard_type: prometheus
+#    t_grafana_dashboard_url: "http://localhost:9090"
+#    t_grafana_dashboard_http_method: "POST"
+#    t_grafana_dashboard_uid: false
+#    t_grafana_dashboard_is_default: false
+#  tags:
+#    - grafana
+
+- name: configure grafana datasource for {{ t_grafana_dashboard_name }}
+  template:
+    src: grafana-datasource.yaml.j2
+    dest: "{{ grafana_conf_dir }}/provisioning/datasources/{{ t_grafana_dashboard_name | replace(' ', '_') | lower }}.yaml"
+    owner: root
+    group: grafana
+    mode: 0640
+  notify:
+    - restart grafana
+  tags:
+    - grafana

@@ -1,0 +1,75 @@
+---
+
+- name: Creating node_exporter group
+  group:
+    name: "{{ node_exporter_group_name }}"
+    system: yes
+
+- name: Creating node_exporter user
+  user:
+    name: "{{ node_exporter_user_name }}"
+    group: "{{ node_exporter_group_name }}"
+    system: yes
+    shell: "/sbin/nologin"
+    comment: "{{ node_exporter_user_name }} nologin User"
+    createhome: no
+
+- name: Get current node_exporter version
+  command: "{{ local_bin_path }}/node_exporter --version"
+  check_mode: no
+  changed_when: false
+  failed_when: false
+  register: __node_exporter_version
+
+- name: Determine whether we need to install node_exporter
+  set_fact:
+    # if the version command failed, OR the parsed version did not match, then we install
+    # 2021 April Note: 0.18.0 sends version to stderr_lines. Future versions may behave like prometheus and use stdout
+    # eg. node_exporter https://github.com/prometheus/node_exporter/issues/1271
+    _install_node_exporter: "{% if __node_exporter_version.rc != 0 or __node_exporter_version.stderr_lines[0].split(' ')[2] != node_exporter_version %}true{% else %}false{% endif %}"
+
+- name: Install node_exporter
+  when: _install_node_exporter or node_exporter_force_install
+  block:
+    - name: Download node_exporter
+      become: no
+      unarchive:
+        src: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Copy node_exporter file to bin
+      # Skip this when in --check mode as the download would have been skipped
+      when: not ansible_check_mode
+      copy:
+        src: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+        dest: "{{ local_bin_path }}/node_exporter"
+        owner: "{{ node_exporter_user_name }}"
+        group: "{{ node_exporter_group_name }}"
+        remote_src: yes
+        mode: 0755
+      notify:
+        - restart node_exporter
+
+    - name: Delete node_exporter tmp folder
+      file:
+        path: '/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64'
+        state: absent
+
+- name: Create Unit file for node_exporter
+  template: src=node_exporter.service.j2 dest=/etc/systemd/system/node_exporter.service mode=644
+  notify:
+    - restart node_exporter
+
+# Trigger systemctl reload/restart if needed
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: start node_exporter service
+  service: name=node_exporter.service state=started enabled=yes
+
+- name: Check if node exporter emits metrices
+  uri:
+    url: http://127.0.0.1:9100/metrics
+    method: GET
+    status_code: 200
