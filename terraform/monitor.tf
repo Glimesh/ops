@@ -20,9 +20,15 @@ resource "digitalocean_droplet" "monitor" {
 }
 
 resource "cloudflare_record" "monitor_record" {
+    for_each = toset([
+    "",
+    "prometheus.",
+    "grafana.",
+  ])
+
   zone_id = lookup(data.cloudflare_zones.glimesh_domain_zones.zones[0], "id")
   type    = "A"
-  name    = var.monitor_hostname
+  name    = "${each.value}${var.monitor_hostname}"
   value   = digitalocean_droplet.monitor.ipv4_address
   proxied = false
 }
