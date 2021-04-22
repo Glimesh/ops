@@ -1,0 +1,22 @@
+# Global options
+{
+        email {{ letsencrypt_email }}
+{% if acme_staging %}
+        acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+{% endif %}
+        # Try ACME / LE first, fallback to ZeroSSL
+        cert_issuer acme
+        cert_issuer zerossl
+}
+
+# Some sane defaults we can reuse
+(default_settings) {
+        encode zstd gzip
+        log {
+                output stderr
+        }
+}
+
+# Load in any extra configured sites
+import {{ caddy_snippets_dir }}/*.conf
+import {{ caddy_sites_dir }}/*.conf

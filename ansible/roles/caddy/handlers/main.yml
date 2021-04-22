@@ -1,0 +1,11 @@
+---
+
+# Validate must be declared first here so it runs first
+- name: validate caddy config
+  command: caddy validate -adapter caddyfile -config /etc/caddy/Caddyfile
+
+- name: restart caddy
+  systemd:
+    name: caddy
+    daemon_reload: yes
+    state: restarted

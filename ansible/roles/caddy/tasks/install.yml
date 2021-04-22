@@ -1,0 +1,87 @@
+---
+
+- name: Install caddy
+  apt:
+    deb: "https://github.com/caddyserver/caddy/releases/download/v{{ caddy_version }}/caddy_{{ caddy_version }}_linux_amd64.deb"
+    # Needed if you wanted to downgrade
+    #force: yes
+  notify:
+    # The deb technically already restarts caddy and triggers the systemd reload
+    - restart caddy
+
+- name: Creates Caddy sites directory
+  file:
+    path: "{{ caddy_sites_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Creates Caddy snippets directory
+  file:
+    path: "{{ caddy_snippets_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Caddy main config file
+  template:
+    src: Caddyfile.j2
+    dest: "{{ caddy_conf_dir }}/Caddyfile"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - validate caddy config
+    - restart caddy
+
+- name: Add Caddy snippets
+  copy:
+    src: "{{ item }}"
+    dest: "{{ caddy_snippets_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - secure.conf
+  notify:
+    - validate caddy config
+    - restart caddy
+
+- name: Add default caddy hostname site
+  include: add_site.yml
+  vars:
+    t_caddy_site_name: hostname
+    t_caddy_site_host: "{{ inventory_hostname }}"
+    t_caddy_site_default_settings: true
+    t_caddy_site_extra_conf: |
+      handle /metrics {
+          metrics /metrics
+      }
+
+      handle /healthcheck {
+          respond "Everything is 200 OK"
+      }
+
+      # Catchall "there is nothing here"
+      respond /* 204
+  when: create_hostname_site
+
+# Trigger systemctl reload/restart if needed
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: start caddy service
+  service: name=caddy.service state=started enabled=yes
+
+- name: Check if caddy is accessible
+  uri:
+    url: https://{{ inventory_hostname }}/
+    method: GET
+  register: _result
+  until: _result.status == 204
+  retries: 12 # 12 * 5 seconds = 1 minute
+  delay: 5 # Every 5 seconds
+  when: create_hostname_site and not acme_staging
+

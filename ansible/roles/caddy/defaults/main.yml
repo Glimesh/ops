@@ -1,0 +1,12 @@
+---
+
+letsencrypt_email: certs@example.com
+# Staging env can be used to avoid the LE ratelimits (5 identical certs per week)
+acme_staging: false
+
+caddy_version: "2.3.0"
+caddy_conf_dir: "/etc/caddy"
+caddy_sites_dir: "{{ caddy_conf_dir }}/sites.d"
+caddy_snippets_dir: "{{ caddy_conf_dir }}/snippets.d"
+
+create_hostname_site: yes
