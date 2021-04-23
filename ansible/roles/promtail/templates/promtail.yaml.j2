@@ -1,3 +1,8 @@
+# Rule 1 of Loki/promtail is limit the use of dynamic labels
+# Ideally, ensure there is a set limit of values for them
+# Every new label value increases the Loki streams
+
+
 server:
   http_listen_port: 9080
   grpc_listen_port: 0
@@ -9,29 +14,96 @@ clients:
   - url: http://localhost:3100/loki/api/v1/push
 
 scrape_configs:
-  - job_name: system
+  # This is far from ideal - we aren't properly considering the file timestamps for example
+  # But, it's a suitable catchall with static labels
+  - job_name: system-varlogs
     static_configs:
     - targets:
         - localhost
       labels:
         job: varlogs
-        __path__: /var/log/*log
+        # Match all the *.log + the apt/history.log (exclude syslog)
+        __path__: /var/log/{*,apt/history}.log
+        instance: {{ inventory_hostname }}
+        region: egll
+
+    pipeline_stages:
+      - match:
+          # Skip the auth (SSHd) and kernel logs which already end up in journald
+          selector: '{filename=~"/var/log/(auth.log|kern.log)"}'
+          action: drop
+          drop_counter_reason: promtail_duplicate_logs
+
 
   - job_name: journal
     journal:
+      # The journald labels are already available, but this logs them
       json: true
       max_age: 12h
-      #path: /var/log/journal
+
       labels:
         job: systemd-journal
-        host: {{ inventory_hostname }}
-        region: lon1
+        instance: {{ inventory_hostname }}
+        region: egll
+
     relabel_configs:
-      - source_labels: ['__journal__systemd_unit']
-        target_label: systemd_unit
-      - source_labels:
-        - __journal__hostname
-        target_label: nodename
-      - source_labels:
-        - __journal_syslog_identifier
-        target_label: syslog_identifier
+      # We take the systemd service name and set as the "app" label
+      # This is only okay because we remove the label for generic services, later
+      - action: replace
+        source_labels: ['__journal__systemd_unit']
+        regex: (.*)\.service
+        target_label: app
+
+    pipeline_stages:
+
+      # This stage is only going to run for caddy.service
+      - match:
+          selector: '{app="caddy"}'
+          pipeline_name: caddy
+          stages:
+            # While the journald keys are already "private" labels, we must decode the JSON to get the MESSAGE key
+            - json:
+                expressions:
+                  caddy_message: MESSAGE
+            # Second JSON decode is needed as the Caddy logs are encoded
+            - json:
+                expressions:
+                  # We grab the TLS servername - this is the cert we served and limited by the Caddy config
+                  server_name: request.tls.server_name
+                  # The Host header shouldn't be put into a label as technically user controlled
+                  http_host: request.host
+                  http_method: request.method
+                  msg:
+                  size:
+                  duration:
+                source: caddy_message
+
+            # Add the server_name as a label (as the values are constrained)
+            # Add the method for the metrics only
+            - labels:
+                server_name:
+                method: http_method
+
+            - metrics:
+                caddy_http_response_duration_seconds:
+                  type: Histogram
+                  description: "Histogram of times to first byte in response bodies"
+                  source: duration
+                  config:
+                    buckets: [0.001,0.0025,0.005,0.010,0.025,0.050,0.10,0.50,1.00,2.50,5.00]
+
+            # Remove now we no longer need it
+            - labeldrop:
+                - method
+
+
+      # This is crucial as it ensure the "app" values are defined (and avoids many Loki streams)
+      # These more generic logs journald can be examined with a search of {app=""}
+      - match:
+          # All the services we are specifically interested in, this won't match, thus will leave "app"
+          selector: '{app!~"caddy|prometheus|grafana-server|loki|promtail"}'
+          pipeline_name: generic_app
+          stages:
+            - labeldrop:
+                - app
+
