@@ -6,4 +6,4 @@ promtail_service_name: promtail
 promtail_version: "2.2.1"
 promtail_force_install: false
 
-promtail_caddy_site: true
+promtail_caddy_site: false

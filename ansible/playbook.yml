@@ -32,4 +32,6 @@
   roles:
     - caddy
     - monitor
+    - loki
+    - promtail
     - prometheus-node-exporter

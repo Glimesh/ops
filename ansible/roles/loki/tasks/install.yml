@@ -115,6 +115,7 @@
     t_caddy_site_default_settings: true
     t_caddy_site_secure_headers: true
     t_caddy_site_reverse_proxy: "localhost:3100"
+  when: loki_caddy_site
   tags:
     - caddy
 

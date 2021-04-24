@@ -1,8 +1,12 @@
 auth_enabled: false
 
 server:
+  # Random port is chosen when 0
+  http_listen_address: localhost
   http_listen_port: 3100
-  grpc_listen_port: 9096
+  grpc_listen_address: localhost
+  #grpc_listen_port: 9096
+  grpc_listen_port: 0
 
 ingester:
   wal:

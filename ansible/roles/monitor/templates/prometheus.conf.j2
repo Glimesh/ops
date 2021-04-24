@@ -7,9 +7,44 @@ rule_files:
 
 scrape_configs:
   - job_name: 'prometheus'
-    scrape_interval: 5s
+    #scrape_interval: 5s
     static_configs:
       - targets: ['localhost:9090']
+        labels:
+          app: prometheus
+          instance: {{ inventory_hostname }}
+
+  - job_name: 'grafana-server'
+    #scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:3000']
+        labels:
+          app: grafana-server
+          instance: {{ inventory_hostname }}
+
+  - job_name: 'loki'
+    #scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:3100']
+        labels:
+          app: loki
+          instance: {{ inventory_hostname }}
+
+  - job_name: 'promtail'
+    #scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9080']
+        labels:
+          app: promtail
+          instance: {{ inventory_hostname }}
+
+  - job_name: 'caddy'
+    #scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:2019']
+        labels:
+          app: caddy
+          instance: {{ inventory_hostname }}
 
   - job_name: 'node_exporter'
     scrape_interval: 5s

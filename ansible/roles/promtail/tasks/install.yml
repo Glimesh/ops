@@ -100,5 +100,6 @@
     t_caddy_site_default_settings: true
     t_caddy_site_secure_headers: true
     t_caddy_site_reverse_proxy: "localhost:9080"
+  when: promtail_caddy_site
   tags:
     - caddy
