@@ -82,7 +82,7 @@
     method: GET
   register: _result
   until: _result.status == 204
-  retries: 12 # 12 * 5 seconds = 1 minute
+  retries: 36 # 36 * 5 seconds = 3 minutes
   delay: 5 # Every 5 seconds
   when: create_hostname_site and not acme_staging
 
