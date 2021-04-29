@@ -1,0 +1,105 @@
+---
+
+- name: install required promtail packages
+  apt:
+    pkg:
+      - unzip
+    state: present
+    update_cache: yes
+
+- name: Creates promtail data directory
+  file:
+    path: "/data/promtail/"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+
+- name: Creates promtail config directory
+  file:
+    path: "/etc/promtail/"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+
+- name: Get current promtail version
+  command: "{{ local_bin_path }}/promtail -version"
+  check_mode: no
+  changed_when: false
+  failed_when: false
+  register: __promtail_version
+
+- name: Determine whether we need to install promtail
+  set_fact:
+    # if the version command failed, OR the parsed version did not match, then we install
+    _install_promtail: "{% if __promtail_version.rc != 0 or __promtail_version.stdout_lines[0].split(' ')[2] != promtail_version %}true{% else %}false{% endif %}"
+
+- name: Install promtail
+  when: _install_promtail or promtail_force_install
+  block:
+    - name: Download promtail
+      become: no
+      unarchive:
+        src: "https://github.com/grafana/loki/releases/download/v{{ promtail_version }}/promtail-linux-amd64.zip"
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Copy promtail file to bin
+      # Skip this when in --check mode as the download would have been skipped
+      when: not ansible_check_mode
+      copy:
+        src: "/tmp/promtail-linux-amd64"
+        dest: "{{ local_bin_path }}/promtail"
+        owner: root
+        group: root
+        remote_src: yes
+        mode: 0750
+      notify:
+        - restart promtail
+
+- name: promtail config file
+  template:
+    src: promtail.yaml.j2
+    dest: /etc/promtail/promtail.yaml
+    owner: root
+    group: root
+    mode: 0640
+  notify:
+    - restart promtail
+
+- name: Create Unit file for promtail
+  template: src=promtail.service.j2 dest=/etc/systemd/system/promtail.service mode=644
+  notify:
+    - restart promtail
+
+# Trigger systemctl reload/restart if needed
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: start promtail service
+  service: name=promtail.service state=started enabled=yes
+
+- name: Check if promtail is accessible
+  uri:
+    url: http://localhost:9080
+    method: GET
+    status_code: 200
+
+- name: configure caddy for promtail
+  include_role:
+    name: caddy
+    apply:
+      tags:
+        - caddy
+    tasks_from: add_site
+    public: no
+  vars:
+    t_caddy_site_name: promtail
+    t_caddy_site_host: "promtail.{{ inventory_hostname }}"
+    t_caddy_site_default_settings: true
+    t_caddy_site_secure_headers: true
+    t_caddy_site_reverse_proxy: "localhost:9080"
+  when: promtail_caddy_site
+  tags:
+    - caddy

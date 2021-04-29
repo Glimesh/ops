@@ -1,0 +1,136 @@
+---
+
+- name: install required loki packages
+  apt:
+    pkg:
+      - unzip
+    state: present
+    update_cache: yes
+
+- name: Creating loki group
+  group:
+    name: "{{ loki_group_name }}"
+    system: yes
+
+- name: Creating loki user
+  user:
+    name: "{{ loki_user_name }}"
+    group: "{{ loki_group_name }}"
+    system: yes
+    shell: "/sbin/nologin"
+    comment: "{{ loki_user_name }} nologin User"
+    createhome: no
+    home: "/data/loki/"
+
+- name: Creates loki data directory
+  file:
+    path: "/data/loki/"
+    state: directory
+    owner: "{{ loki_user_name }}"
+    group: "{{ loki_group_name }}"
+    mode: 0750
+
+- name: Creates loki config directory
+  file:
+    path: "/etc/loki/"
+    state: directory
+    owner: root
+    group: "{{ loki_group_name }}"
+    mode: 0770
+
+- name: Get current loki version
+  command: "{{ local_bin_path }}/loki -version"
+  check_mode: no
+  changed_when: false
+  failed_when: false
+  register: __loki_version
+
+- name: Determine whether we need to install loki
+  set_fact:
+    # if the version command failed, OR the parsed version did not match, then we install
+    _install_loki: "{% if __loki_version.rc != 0 or __loki_version.stdout_lines[0].split(' ')[2] != loki_version %}true{% else %}false{% endif %}"
+
+- name: Install loki
+  when: _install_loki or loki_force_install
+  block:
+    - name: Download loki
+      become: no
+      unarchive:
+        src: "https://github.com/grafana/loki/releases/download/v{{ loki_version }}/loki-linux-amd64.zip"
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Copy loki file to bin
+      # Skip this when in --check mode as the download would have been skipped
+      when: not ansible_check_mode
+      copy:
+        src: "/tmp/loki-linux-amd64"
+        dest: "{{ local_bin_path }}/loki"
+        owner: root
+        group: "{{ loki_group_name }}"
+        remote_src: yes
+        mode: 0750
+      notify:
+        - restart loki
+
+- name: loki config file
+  template:
+    src: loki.yaml.j2
+    dest: /etc/loki/loki.yaml
+    owner: root
+    group: "{{ loki_group_name }}"
+    mode: 0640
+  notify:
+    - restart loki
+
+- name: Create Unit file for loki
+  template: src=loki.service.j2 dest=/etc/systemd/system/loki.service mode=644
+  notify:
+    - restart loki
+
+# Trigger systemctl reload/restart if needed
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: start loki service
+  service: name=loki.service state=started enabled=yes
+
+- name: Check if loki is accessible
+  uri:
+    url: http://localhost:3100/metrics
+    method: GET
+    status_code: 200
+
+- name: configure caddy for loki
+  include_role:
+    name: caddy
+    apply:
+      tags:
+        - caddy
+    tasks_from: add_site
+    public: no
+  vars:
+    t_caddy_site_name: loki
+    t_caddy_site_host: "loki.{{ inventory_hostname }}"
+    t_caddy_site_default_settings: true
+    t_caddy_site_secure_headers: true
+    t_caddy_site_reverse_proxy: "localhost:3100"
+  when: loki_caddy_site
+  tags:
+    - caddy
+
+- name: configure grafana for loki
+  include_role:
+    name: monitor
+    apply:
+      tags:
+        - grafana
+    tasks_from: grafana_add_datasource
+    public: no
+  vars:
+    t_grafana_dashboard_name: Loki
+    t_grafana_dashboard_type: loki
+    t_grafana_dashboard_url: "http://localhost:3100"
+    t_grafana_dashboard_uid: "glim-loki"
+  tags:
+    - grafana
