@@ -80,6 +80,7 @@
   uri:
     url: https://{{ inventory_hostname }}/
     method: GET
+    status_code: 204
   register: _result
   until: _result.status == 204
   retries: 36 # 36 * 5 seconds = 3 minutes
