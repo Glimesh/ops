@@ -42,14 +42,6 @@
   set_fact:
     # if the version command failed, OR the parsed version did not match, then we install
     _install_prometheus: "{% if __prometheus_version.rc != 0 or __prometheus_version.stdout_lines[0].split(' ')[2] != prometheus_version %}true{% else %}false{% endif %}"
-  when: __prometheus_version.stdout_lines
-
-# Pre 2.26.0, the version info was to stderr... This block can be removed after infra upgrades
-- name: Determine whether we need to install prometheus
-  set_fact:
-    # if the version command failed, OR the parsed version did not match, then we install
-    _install_prometheus: "{% if __prometheus_version.rc != 0 or __prometheus_version.stderr_lines[0].split(' ')[2] != prometheus_version %}true{% else %}false{% endif %}"
-  when: __prometheus_version.stderr_lines
 
 - name: Install prometheus
   when: _install_prometheus or prometheus_force_install
