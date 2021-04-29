@@ -128,9 +128,9 @@
     tasks_from: grafana_add_datasource
     public: no
   vars:
-    t_grafana_dashboard_name: Loki
-    t_grafana_dashboard_type: loki
-    t_grafana_dashboard_url: "http://localhost:3100"
-    t_grafana_dashboard_uid: "glim-loki"
+    t_grafana_datasource_name: Loki
+    t_grafana_datasource_type: loki
+    t_grafana_datasource_url: "http://localhost:3100"
+    t_grafana_datasource_uid: "glim-loki"
   tags:
     - grafana

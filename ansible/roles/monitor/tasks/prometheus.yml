@@ -42,14 +42,6 @@
   set_fact:
     # if the version command failed, OR the parsed version did not match, then we install
     _install_prometheus: "{% if __prometheus_version.rc != 0 or __prometheus_version.stdout_lines[0].split(' ')[2] != prometheus_version %}true{% else %}false{% endif %}"
-  when: __prometheus_version.stdout_lines
-
-# Pre 2.26.0, the version info was to stderr... This block can be removed after infra upgrades
-- name: Determine whether we need to install prometheus
-  set_fact:
-    # if the version command failed, OR the parsed version did not match, then we install
-    _install_prometheus: "{% if __prometheus_version.rc != 0 or __prometheus_version.stderr_lines[0].split(' ')[2] != prometheus_version %}true{% else %}false{% endif %}"
-  when: __prometheus_version.stderr_lines
 
 - name: Install prometheus
   when: _install_prometheus or prometheus_force_install
@@ -110,12 +102,12 @@
 - name: configure prometheus for grafana
   include: grafana_add_datasource.yml
   vars:
-    t_grafana_dashboard_name: Prometheus
-    t_grafana_dashboard_type: prometheus
-    t_grafana_dashboard_url: "http://localhost:9090"
-    t_grafana_dashboard_http_method: "POST"
-    t_grafana_dashboard_uid: "glim-prometheus"
-    t_grafana_dashboard_is_default: true
+    t_grafana_datasource_name: Prometheus
+    t_grafana_datasource_type: prometheus
+    t_grafana_datasource_url: "http://localhost:9090"
+    t_grafana_datasource_http_method: "POST"
+    t_grafana_datasource_uid: "glim-prometheus"
+    t_grafana_datasource_is_default: true
   tags:
     - grafana
 
