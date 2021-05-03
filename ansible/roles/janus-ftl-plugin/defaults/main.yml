@@ -5,6 +5,14 @@ libsrtp_version: "v2.3.0"
 janusgateway_version: "v0.10.9"
 janus_ftl_plugin_version: "master"
 
+# Using an admin Glimesh account, create an "Application"
 glimesh_client_id: some_key
 glimesh_client_secret: some_key
+
+# Location of Glimesh API
+glimesh_api_hostname: example.com
+glimesh_api_port: 443
+glimesh_api_https: true
+
+# Must match the Orchestrator key
 ftl_orchestrator_psk: some_key

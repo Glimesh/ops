@@ -8,14 +8,15 @@ glimesh_home: some_value
 glimesh_release_cookie: some_value
 glimesh_release_node: some_value
 glimesh_release_distribution: some_value
+glimesh_pool_size: 1
 
-glimesh_database_url: some_value
-glimesh_secret_key_base: some_value
-glimesh_live_view_signing_salt: some_value
-glimesh_url_scheme: some_value
-glimesh_url_host: some_value
-glimesh_url_port: some_value
-glimesh_http_port: some_value
+glimesh_database_url: "ecto://username:password@db_hostname/db_name"
+glimesh_secret_key_base: some_value_that_is_just_longer_than_63_characters_so_it_is_valid
+glimesh_live_view_signing_salt: some_value_that_is_32_characters
+glimesh_url_scheme: http
+glimesh_url_host: example.com
+glimesh_url_port: 8080
+glimesh_http_port: 8080
 
 glimesh_mailgun_domain: some_value
 glimesh_mailgun_api_key: some_value
@@ -27,8 +28,8 @@ glimesh_stripe_webhook_secret: some_value
 
 glimesh_glimesh_email_physical_address: some_value
 
-glimesh_hcaptcha_public_key: some_value
-glimesh_hcaptcha_secret: some_value
+glimesh_hcaptcha_public_key: "10000000-ffff-ffff-ffff-000000000001"
+glimesh_hcaptcha_secret: "0x0000000000000000000000000000000000000000"
 
 glimesh_waffle_endpoint: some_value
 glimesh_do_spaces_public_key: some_value
@@ -41,4 +42,11 @@ glimesh_twitter_consumer_secret: some_value
 glimesh_twitter_access_token: some_value
 glimesh_twitter_access_secret: some_value
 
+glimesh_enable_libcluster: false
 glimesh_start_workers: false
+
+appsignal_name: some_value
+appsignal_api_key: some_value
+glimesh_taxidpro_api_key: some_value
+glimesh_taxidpro_webhook_secret: some_value
+glimesh_rawg_api_key: some_value

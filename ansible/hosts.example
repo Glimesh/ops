@@ -7,6 +7,9 @@ ftl_orchestrator_hostname=some_value
 letsencrypt_email=some_value
 glimesh_client_id=some_value
 glimesh_client_secret=some_value
+glimesh_api_hostname=example.com
+glimesh_api_port=8080
+glimesh_api_https=False
 
 [ftl:children]
 ftl_ingest
@@ -14,23 +17,36 @@ ftl_edge
 ftl_orchestrator
 
 [ftl_ingest]
-some-ftl-ingest-servers
-some-ftl-ingest-servers
+some-ftl-ingest-servers region=region1
+some-ftl-ingest-servers region=region1
 
 [ftl_edge]
-some-ftl-edge-servers
-some-ftl-edge-servers
-some-ftl-edge-servers
+some-ftl-edge-servers region=region1
+some-ftl-edge-servers region=region1
+some-ftl-edge-servers region=region1
 
 [ftl_orchestrator]
-some-orchestrator-server
+some-orchestrator-server region=region1
+
+[web]
+some-web-servers region=region1
+some-web-servers region=region1
+
+
+[web:vars]
+glimesh_url_scheme=http
+glimesh_url_host=example.com
+glimesh_url_port=8080
+glimesh_http_port=8080
+glimesh_database_url="ecto://username:password@db_hostname/db_name"
 
 # Monitoring
 [monitor]
-monitoring-server
+monitoring-server region=region1
 
 [node_exporter:children]
 monitor
+web
 ftl
 
 [all:vars]
