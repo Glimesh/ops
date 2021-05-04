@@ -35,3 +35,6 @@ ftl
 
 [all:vars]
 ansible_user=root
+
+loki_host=loki.monitoring-server
+loki_caddy_basicauth_promtail=very_secret_password_which_is_greater_than_63_characters_is_best
