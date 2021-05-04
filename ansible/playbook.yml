@@ -1,20 +1,32 @@
 
+- name: monitoring server
+  hosts: monitor
+  roles:
+    - caddy
+    - monitor
+    - loki
+    - promtail
+    - prometheus-node-exporter
+
 - name: web
   hosts: web
   serial: 1
   roles:
+    - promtail
     - glimesh-web
     - prometheus-node-exporter
 
 - name: ftl orchestrator
   hosts: ftl_orchestrator
   roles:
+    - promtail
     - janus-ftl-orchestrator
     - prometheus-node-exporter
 
 - name: ftl ingest
   hosts: ftl_ingest
   roles:
+    - promtail
     - janus-ftl-plugin
     - prometheus-node-exporter
 
@@ -23,15 +35,7 @@
   vars:
     ftl_node_kind: edge
   roles:
+    - promtail
     - janus-ftl-plugin
     - janus-ftl-nginx-ssl
-    - prometheus-node-exporter
-
-- name: monitoring server
-  hosts: monitor
-  roles:
-    - caddy
-    - monitor
-    - loki
-    - promtail
     - prometheus-node-exporter
