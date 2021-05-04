@@ -77,6 +77,7 @@
   service: name=caddy.service state=started enabled=yes
 
 - name: Check if caddy is accessible
+  check_mode: no
   uri:
     url: https://{{ inventory_hostname }}/
     method: GET
