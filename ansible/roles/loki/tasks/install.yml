@@ -141,6 +141,20 @@
   tags:
     - caddy
 
+- name: Check if Loki is protected
+  check_mode: no
+  uri:
+    url: "https://loki.{{ inventory_hostname }}/"
+    method: GET
+    status_code: 401
+  register: _result
+  until: _result.status == 401
+  retries: 36 # 36 * 5 seconds = 3 minutes
+  delay: 5 # Every 5 seconds
+  when: loki_caddy_site and not acme_staging
+  tags:
+    - caddy
+
 - name: configure grafana for loki
   include_role:
     name: monitor
