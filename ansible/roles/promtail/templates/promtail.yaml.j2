@@ -1,11 +1,14 @@
 # Rule 1 of Loki/promtail is limit the use of dynamic labels
 # Ideally, ensure there is a set limit of values for them
 # Every new label value increases the Loki streams
-
+#
+# Timestamp parsing is probably a bad route for journald logs as it already
+# will have reliably/accuaretly recorded at the ms level.
+# Might be worth doing for conventional file based logs when they are relevant.
 
 server:
   # Random port is chosen when 0
-  http_listen_address: localhost
+  http_listen_address: 0.0.0.0
   http_listen_port: 9080
   grpc_listen_address: localhost
   grpc_listen_port: 0

@@ -47,14 +47,6 @@ scrape_configs:
           app: loki
           instance: {{ inventory_hostname }}
 
-  - job_name: 'promtail'
-    #scrape_interval: 5s
-    static_configs:
-      - targets: ['localhost:9080']
-        labels:
-          app: promtail
-          instance: {{ inventory_hostname }}
-
   - job_name: 'caddy'
     #scrape_interval: 5s
     static_configs:
@@ -62,6 +54,31 @@ scrape_configs:
         labels:
           app: caddy
           instance: {{ inventory_hostname }}
+
+  - job_name: 'promtail'
+    #scrape_interval: 5s
+    metric_relabel_configs:
+      # promtail_custom metrics will have their own app/job, let's relabel the app only
+      - source_labels: [exported_app]
+        target_label: app
+      # Remove the "exported" labels now we don't need them
+      - regex: 'exported_(app|job)'
+        action: labeldrop
+      # Drop metrics for irrelevant etcd/cortex/prometheus series' which are unused by promtail (always 0)
+      - source_labels: [__name__]
+        regex: '^(etcd|cortex|prometheus).*'
+        action: drop
+    static_configs:
+{% for host in groups["all"] %}
+      - targets: ['{{ host }}:9080']
+        labels:
+          app: promtail
+          instance: {{ host }}
+          region: {{ hostvars[host].region }}
+{% if hostvars[host].ftl_node_kind is defined %}
+          ftl_node_kind: {{ hostvars[host].ftl_node_kind }}
+{% endif %}
+{% endfor %}
 
   - job_name: 'node_exporter'
     scrape_interval: 5s
