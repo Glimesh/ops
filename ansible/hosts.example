@@ -29,6 +29,10 @@ some-orchestrator-server
 [monitor]
 monitoring-server
 
+[monitor:vars]
+# The monitoring server generates its own logs which causes more logs
+promtail_log_batchwait_seconds=15
+
 [node_exporter:children]
 monitor
 ftl

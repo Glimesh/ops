@@ -7,3 +7,12 @@ promtail_version: "2.2.1"
 promtail_force_install: false
 
 promtail_caddy_site: false
+
+# Which systemd services do we want to specifically label
+promtail_journald_app_whitelist: "caddy|prometheus|grafana-server|loki|promtail|glimesh|janus|orchestrator"
+promtail_log_batchwait_seconds: 1
+
+# Set to the configured Loki site name (likely "loki." + monitoring server hostname)
+loki_host: loki.monitoring.example.com
+loki_caddy_basicauth_promtail: some_value
+loki_skip_verify: false

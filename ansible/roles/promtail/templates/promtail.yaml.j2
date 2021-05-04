@@ -14,7 +14,16 @@ positions:
   filename: /data/promtail/positions.yaml
 
 clients:
-  - url: http://localhost:3100/loki/api/v1/push
+  - url: https://{{ loki_host }}/loki/api/v1/push
+    batchwait: {{ promtail_log_batchwait_seconds }}s
+    basic_auth:
+      username: promtail
+      password: {{ loki_caddy_basicauth_promtail }}
+    tls_config:
+      insecure_skip_verify: {{ loki_skip_verify }}
+    external_labels:
+      instance: {{ inventory_hostname }}
+      region: {{ region }}
 
 scrape_configs:
   # This is far from ideal - we aren't properly considering the file timestamps for example
@@ -27,8 +36,6 @@ scrape_configs:
         job: varlogs
         # Match all the *.log + the apt/history.log (exclude syslog)
         __path__: /var/log/{*,apt/history}.log
-        instance: {{ inventory_hostname }}
-        region: egll
 
     pipeline_stages:
       - match:
@@ -46,8 +53,6 @@ scrape_configs:
 
       labels:
         job: systemd-journal
-        instance: {{ inventory_hostname }}
-        region: egll
 
     relabel_configs:
       # We take the systemd service name and set as the "app" label
