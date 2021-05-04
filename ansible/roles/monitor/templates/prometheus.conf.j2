@@ -1,3 +1,10 @@
+#
+# Label standards:
+#   instance - hostname of the node (no port/scheme/URL path)
+#   app - matches the loki label configs (job labels there are different)
+#   job - corresponds to the scrape config (often, but not always the same as app)
+#
+
 global:
   scrape_interval: 15s
 
@@ -8,6 +15,11 @@ rule_files:
 scrape_configs:
   - job_name: 'prometheus'
     #scrape_interval: 5s
+    metric_relabel_configs:
+      # Drop metrics for irrelevant k8 series' which is currently unused by prometheus (always 0)
+      - source_labels: [__name__]
+        regex: '^(prometheus_sd_kubernetes).*'
+        action: drop
     static_configs:
       - targets: ['localhost:9090']
         labels:
@@ -24,6 +36,11 @@ scrape_configs:
 
   - job_name: 'loki'
     #scrape_interval: 5s
+    metric_relabel_configs:
+      # Drop metrics for irrelevant etcd series' which is currently unused by loki (always 0)
+      - source_labels: [__name__]
+        regex: '^(etcd).*'
+        action: drop
     static_configs:
       - targets: ['localhost:3100']
         labels:
@@ -49,9 +66,10 @@ scrape_configs:
   - job_name: 'node_exporter'
     scrape_interval: 5s
     static_configs:
-{% for host in groups['node_exporter'] %}
+{% for host in groups["all"] %}
       - targets: ['{{ host }}:9100']
         labels:
+          instance: {{ host }}
           region: {{ hostvars[host].region }}
 {% if hostvars[host].ftl_node_kind is defined %}
           ftl_node_kind: {{ hostvars[host].ftl_node_kind }}
@@ -64,10 +82,10 @@ scrape_configs:
     params:
       module: [http_json_200]  # Look for a HTTP 200 with JSON data
     relabel_configs:
+      # Use the given address ("target") and turn it into a __param used to query the blackbox_exporter
       - source_labels: [__address__]
         target_label: __param_target
-      - source_labels: [__param_target]
-        target_label: instance
+      # Prometheus needs the address of the blackbox_exporter
       - target_label: __address__
         replacement: localhost:9115  # The blackbox exporter's real hostname:port.
     static_configs:
@@ -75,6 +93,8 @@ scrape_configs:
 {% if inventory_hostname != host %}
       - targets: ['https://{{ host }}/janus/info']
         labels:
+          app: janus
+          instance: {{ host }}
           region: {{ hostvars[host].region }}
           ftl_node_kind: {{ hostvars[host].ftl_node_kind }}
 {% endif %}
@@ -87,10 +107,10 @@ scrape_configs:
     params:
       module: [ftl_ping]  # Look for a 201 response to a PING
     relabel_configs:
+      # Use the given address ("target") and turn it into a __param used to query the blackbox_exporter
       - source_labels: [__address__]
         target_label: __param_target
-      - source_labels: [__param_target]
-        target_label: instance
+      # Prometheus needs the address of the blackbox_exporter
       - target_label: __address__
         replacement: localhost:9115  # The blackbox exporter's real hostname:port.
     static_configs:
@@ -98,6 +118,8 @@ scrape_configs:
 {% if inventory_hostname != host %}
       - targets: ['{{ host }}:8084']
         labels:
+          app: janus
+          instance: {{ host }}
           region: {{ hostvars[host].region }}
           ftl_node_kind: {{ hostvars[host].ftl_node_kind }}
 {% endif %}
