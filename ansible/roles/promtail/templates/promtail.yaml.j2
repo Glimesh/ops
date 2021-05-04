@@ -27,6 +27,9 @@ clients:
     external_labels:
       instance: {{ inventory_hostname }}
       region: {{ region }}
+{% if ftl_node_kind is defined %}
+      ftl_node_kind: {{ ftl_node_kind }}
+{% endif %}
 
 scrape_configs:
   # This is far from ideal - we aren't properly considering the file timestamps for example
