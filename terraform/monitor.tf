@@ -24,6 +24,7 @@ resource "cloudflare_record" "monitor_record" {
     "",
     "prometheus.",
     "grafana.",
+    "loki.",
   ])
 
   zone_id = lookup(data.cloudflare_zones.glimesh_domain_zones.zones[0], "id")

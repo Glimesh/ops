@@ -29,9 +29,16 @@ some-orchestrator-server
 [monitor]
 monitoring-server
 
+[monitor:vars]
+# The monitoring server generates its own logs which causes more logs
+promtail_log_batchwait_seconds=15
+
 [node_exporter:children]
 monitor
 ftl
 
 [all:vars]
 ansible_user=root
+
+loki_host=loki.monitoring-server
+loki_caddy_basicauth_promtail=very_secret_password_which_is_greater_than_63_characters_is_best

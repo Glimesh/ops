@@ -8,4 +8,8 @@ loki_group_name: loki
 loki_version: "2.2.1"
 loki_force_install: false
 
-loki_caddy_site: false
+loki_caddy_site: true
+loki_caddy_basicauth_promtail: some_value
+# This hash does not need to be generated manually, instead the playbook
+# will throw an (ignored) error highlighting what to set it to.
+loki_caddy_basicauth_promtail_hash: ""

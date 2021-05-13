@@ -1,0 +1,62 @@
+---
+
+# Given a var name in t_caddy_basic_pass_var_name, we check if the _hash var of
+# it exists. If it exists, all good, otherwise, we generate a new hash and alert
+# the user they should set this new var
+#
+# It's not a true failure as it shouldn't break anything when not set - but it
+# will generate and change the file _every_ run which is bad.
+#
+# Note: This is a result of the bcrypt hashing that caddy uses for basicauth.
+#
+# Vars to set when calling this task (eg. via include_role):
+#
+#  include_role:
+#    name: caddy
+#    apply:
+#      tags:
+#        - caddy
+#        - caddy_pass
+#    tasks_from: gen_basic_pass
+#    public: no
+#  vars:
+#    t_caddy_basic_pass_var_name: "service_caddy_basicauth"
+#  tags:
+#    - caddy
+#    - caddy_pass
+
+- name: Determine if hashed password is already set
+  set_fact:
+    # If the _hash var has been set, then this is True, else is False
+    __hashed_password_has_been_set: "{{ true if lookup('vars', t_caddy_basic_pass_var_name + '_hash', default=False) else false}}"
+
+- debug:
+    msg: "A hashed password was supplied for {{ t_caddy_basic_pass_var_name }}: {{ __hashed_password_has_been_set }}"
+  tags:
+    - caddy
+    - caddy_pass
+
+- name: Generate Caddy basicauth password hash for {{ t_caddy_basic_pass_var_name }}
+  # The lookup grabs the plaintext password that has been set
+  command: "caddy hash-password --plaintext {{ lookup('vars', t_caddy_basic_pass_var_name) }}"
+  check_mode: no
+  changed_when: false
+  register: __hash_password
+  when: not __hashed_password_has_been_set
+  tags:
+    - caddy
+    - caddy_pass
+
+- name: Set value of {{ t_caddy_basic_pass_var_name }}_hash var to the new password hash
+  set_fact:
+    "{{ t_caddy_basic_pass_var_name }}_hash": "{{ __hash_password.stdout_lines[0] }}"
+  when: not __hashed_password_has_been_set
+
+- debug:
+    msg:
+      - "!! NOTE !! : We've generated a *unique* password hash for the value of {{ t_caddy_basic_pass_var_name }}"
+      - "Please now set the following var in the playbook so we can skip this in the future."
+      - "{{ t_caddy_basic_pass_var_name }}_hash: {{ lookup('vars', t_caddy_basic_pass_var_name + '_hash') }}"
+  failed_when: true
+  ignore_errors: true
+  when: not __hashed_password_has_been_set

@@ -1,11 +1,14 @@
 # Rule 1 of Loki/promtail is limit the use of dynamic labels
 # Ideally, ensure there is a set limit of values for them
 # Every new label value increases the Loki streams
-
+#
+# Timestamp parsing is probably a bad route for journald logs as it already
+# will have reliably/accuaretly recorded at the ms level.
+# Might be worth doing for conventional file based logs when they are relevant.
 
 server:
   # Random port is chosen when 0
-  http_listen_address: localhost
+  http_listen_address: 0.0.0.0
   http_listen_port: 9080
   grpc_listen_address: localhost
   grpc_listen_port: 0
@@ -14,7 +17,19 @@ positions:
   filename: /data/promtail/positions.yaml
 
 clients:
-  - url: http://localhost:3100/loki/api/v1/push
+  - url: https://{{ loki_host }}/loki/api/v1/push
+    batchwait: {{ promtail_log_batchwait_seconds }}s
+    basic_auth:
+      username: promtail
+      password: {{ loki_caddy_basicauth_promtail }}
+    tls_config:
+      insecure_skip_verify: {{ loki_skip_verify }}
+    external_labels:
+      instance: {{ inventory_hostname }}
+      region: {{ region }}
+{% if ftl_node_kind is defined %}
+      ftl_node_kind: {{ ftl_node_kind }}
+{% endif %}
 
 scrape_configs:
   # This is far from ideal - we aren't properly considering the file timestamps for example
@@ -27,8 +42,6 @@ scrape_configs:
         job: varlogs
         # Match all the *.log + the apt/history.log (exclude syslog)
         __path__: /var/log/{*,apt/history}.log
-        instance: {{ inventory_hostname }}
-        region: egll
 
     pipeline_stages:
       - match:
@@ -46,8 +59,6 @@ scrape_configs:
 
       labels:
         job: systemd-journal
-        instance: {{ inventory_hostname }}
-        region: egll
 
     relabel_configs:
       # We take the systemd service name and set as the "app" label
@@ -92,6 +103,8 @@ scrape_configs:
                   type: Histogram
                   description: "Histogram of times to first byte in response bodies"
                   source: duration
+                  # The labels are defined so the /metrics won't grow uncontrollably, set long idle timer
+                  max_idle_duration: 12h
                   config:
                     buckets: [0.001,0.0025,0.005,0.010,0.025,0.050,0.10,0.50,1.00,2.50,5.00]
 
@@ -100,13 +113,18 @@ scrape_configs:
                 - method
 
 
-      # This is crucial as it ensure the "app" values are defined (and avoids many Loki streams)
-      # These more generic logs journald can be examined with a search of {app=""}
+      # This is crucial as it ensure the "app" values are defined/constrained (and avoids many Loki streams)
+      # These more generic logs journald can be examined with a search of {app="generic"}
       - match:
-          # All the services we are specifically interested in, this won't match, thus will leave "app"
-          selector: '{app!~"caddy|prometheus|grafana-server|loki|promtail"}'
+          # All the services we are specifically interested in won't have their label changed
+          selector: '{app!~"{{ promtail_journald_app_whitelist }}"}'
           pipeline_name: generic_app
           stages:
-            - labeldrop:
-                - app
+            # Create a new var
+            - template:
+                source: _generic_app_name
+                template: "generic"
+            # Use new var to set "app" label
+            - labels:
+                app: _generic_app_name
 
