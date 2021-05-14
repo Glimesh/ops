@@ -27,7 +27,7 @@ scrape_configs:
           instance: {{ inventory_hostname }}
 
   - job_name: 'grafana-server'
-    #scrape_interval: 5s
+    scrape_interval: 30s
     static_configs:
       - targets: ['localhost:3000']
         labels:
@@ -48,7 +48,12 @@ scrape_configs:
           instance: {{ inventory_hostname }}
 
   - job_name: 'caddy'
-    #scrape_interval: 5s
+    scrape_interval: 30s
+    metric_relabel_configs:
+      # Caddy seemingly has the worst metrics design :(
+      - source_labels: [__name__]
+        regex: '^(caddy_http_).*'
+        action: drop
     static_configs:
       - targets: ['localhost:2019']
         labels:
