@@ -1,9 +1,15 @@
+
+resource "digitalocean_tag" "monitor" {
+  name = "monitor"
+}
+
 resource "digitalocean_droplet" "monitor" {
   image              = "ubuntu-20-04-x64"
   name               = var.monitor_hostname
   region             = "nyc3"
   size               = "s-2vcpu-2gb"
   private_networking = true
+  tags                 = [digitalocean_tag.monitor.id]
   backups            = true
 
   ssh_keys = [

@@ -136,6 +136,27 @@ resource "digitalocean_firewall" "web_lb_only_traffic" {
     source_tags = [digitalocean_tag.web.id]
   }
 
+  # From Monitoring
+  inbound_rule {
+    protocol    = "icmp"
+    source_tags = [digitalocean_tag.monitor.id]
+  }
+  inbound_rule {
+    protocol    = "tcp"
+    port_range  = "8080"
+    source_tags = [digitalocean_tag.monitor.id]
+  }
+  inbound_rule {
+    protocol    = "tcp"
+    port_range  = "9080"
+    source_tags = [digitalocean_tag.monitor.id]
+  }
+  inbound_rule {
+    protocol    = "tcp"
+    port_range  = "9100"
+    source_tags = [digitalocean_tag.monitor.id]
+  }
+
   # From Load Balancer
   inbound_rule {
     protocol                  = "tcp"
