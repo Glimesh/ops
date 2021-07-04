@@ -8,7 +8,14 @@ User={{ blackbox_exporter_user_name }}
 Group={{ blackbox_exporter_group_name }}
 Restart=on-abnormal
 Type=simple
-ExecStart={{ local_bin_path }}/blackbox_exporter --config.file=/etc/blackbox_exporter/blackbox_exporter.conf --web.listen-address="localhost:9115"
+# History Limit is the count of test results and the count of test failures kept in memory
+ExecStart={{ local_bin_path }}/blackbox_exporter \
+                                    --config.file=/etc/blackbox_exporter/blackbox_exporter.conf \
+                                    --web.listen-address="localhost:9115" \
+                                    --history.limit 25
+
+MemoryHigh=150M
+MemoryMax=200M
 
 [Install]
 WantedBy=multi-user.target

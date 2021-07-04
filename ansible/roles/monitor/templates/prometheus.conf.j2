@@ -47,6 +47,13 @@ scrape_configs:
           app: loki
           instance: {{ inventory_hostname }}
 
+  - job_name: 'blackbox_exporter'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['localhost:9115']
+        labels:
+          instance: {{ inventory_hostname }}
+
   - job_name: 'caddy'
     scrape_interval: 30s
     metric_relabel_configs:

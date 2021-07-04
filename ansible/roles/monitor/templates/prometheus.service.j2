@@ -8,7 +8,10 @@ User={{ prometheus_user_name }}
 Group={{ prometheus_group_name }}
 Restart=on-abnormal
 Type=simple
-ExecStart=/usr/local/bin/prometheus --config.file=/etc/prometheus/prometheus.conf --storage.tsdb.path=/data/prometheus --storage.tsdb.retention=31d
+ExecStart={{ local_bin_path }}/prometheus \
+                                    --config.file=/etc/prometheus/prometheus.conf \
+                                    --storage.tsdb.path=/data/prometheus \
+                                    --storage.tsdb.retention=31d
 
 [Install]
 WantedBy=multi-user.target
