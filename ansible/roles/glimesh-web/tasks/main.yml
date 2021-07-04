@@ -21,27 +21,31 @@
 - name: Trust GitHub
   shell: ssh-keyscan github.com >> ~/.ssh/known_hosts
 
-# - name: install elixir
-#   apt:
-#     deb: https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb
+- name: install elixir
+  apt:
+    deb: https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb
 
-# - name: install required packages
-#   apt:
-#     pkg:
-#       - esl-erlang
-#       - elixir
-#       - npm
-#       - git
-#       - openssl
-#       - imagemagick
-#     state: present
-#     update_cache: yes
+- name: install required packages
+  apt:
+    pkg:
+      - esl-erlang
+      - elixir
+      - npm
+      - git
+      - openssl
+      - imagemagick
+      - librsvg2-bin
+    state: present
+    update_cache: yes
 
 - name: install hex
   command: mix local.hex --force
 
 - name: install rebar
   command: mix local.rebar --force
+
+- name: install global svgo for emotes
+  command: npm -g install svgo
 
 - name: ensure tmp build dir exists
   file:
