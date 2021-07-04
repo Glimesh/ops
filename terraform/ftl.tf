@@ -44,7 +44,7 @@ locals {
     kjfk = {
       region       = "kjfk",
       do_region    = "nyc3",
-      ingest_count = 2,
+      ingest_count = 1,
       edge_count   = 6,
       edge_size    = "s-2vcpu-4gb"
     },

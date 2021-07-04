@@ -25,6 +25,12 @@ Environment="ENABLE_LIBCLUSTER=true"
 {% if glimesh_start_workers %}
 Environment="GLIMESH_START_WORKERS=true"
 {% endif %}
+{% if glimesh_enable_promex %}
+Environment="ENABLE_PROMEX=true"
+Environment="PROMEX_AUTH_TOKEN={{ glimesh_promex_auth_token }}"
+Environment="GRAFANA_HOST={{ glimesh_grafana_host }}"
+Environment="GRAFANA_AUTH_TOKEN={{ glimesh_grafana_auth_token }}"
+{% endif %}
 
 Environment="DATABASE_URL={{ glimesh_database_url }}"
 Environment="SECRET_KEY_BASE={{ glimesh_secret_key_base }}"
@@ -66,6 +72,9 @@ Environment="TAXIDPRO_API_KEY={{ glimesh_taxidpro_api_key }}"
 Environment="TAXIDPRO_WEBHOOK_SECRET={{ glimesh_taxidpro_webhook_secret }}"
 
 Environment="RAWG_API_KEY={{ glimesh_rawg_api_key }}"
+
+Environment="GLIMESH_MAX_CHANNEL_EMOTES=2"
+
 
 [Install]
 WantedBy=multi-user.target

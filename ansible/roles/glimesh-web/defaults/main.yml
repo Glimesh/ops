@@ -44,6 +44,11 @@ glimesh_twitter_access_secret: some_value
 
 glimesh_enable_libcluster: false
 glimesh_start_workers: false
+glimesh_enable_promex: false
+
+glimesh_grafana_host: full_url
+glimesh_grafana_auth_token: some_value
+glimesh_promex_auth_token: some_value
 
 appsignal_name: some_value
 appsignal_api_key: some_value

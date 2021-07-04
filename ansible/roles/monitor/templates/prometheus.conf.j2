@@ -105,6 +105,19 @@ scrape_configs:
 {% endif %}
 {% endfor %}
 
+  - job_name: 'promex'
+    scrape_interval: 5s
+    metrics_path: /metrics
+    authorization:
+      credentials: "{{ glimesh_promex_auth_token }}"
+    static_configs:
+{% for host in groups["web"] %}
+      - targets: ['{{ host }}:4021']
+        labels:
+          instance: {{ host }}
+          region: {{ hostvars[host].region }}
+{% endfor %}
+
   - job_name: 'janus_http'
     scrape_interval: 5s
     metrics_path: /probe

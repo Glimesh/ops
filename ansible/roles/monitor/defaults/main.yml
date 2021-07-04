@@ -16,3 +16,5 @@ blackbox_exporter_user_name: blackbox_exporter
 blackbox_exporter_group_name: blackbox_exporter
 blackbox_exporter_version: "0.18.0"
 blackbox_exporter_force_install: false
+
+glimesh_promex_auth_token: some_value
