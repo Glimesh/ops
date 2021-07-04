@@ -19,7 +19,9 @@ Environment="RELEASE_NODE={{ glimesh_release_node }}"
 Environment="RELEASE_DISTRIBUTION={{ glimesh_release_distribution }}"
 Environment="POOL_SIZE={{ glimesh_pool_size }}"
 
+{% if glimesh_enable_libcluster %}
 Environment="ENABLE_LIBCLUSTER=true"
+{% endif %}
 {% if glimesh_start_workers %}
 Environment="GLIMESH_START_WORKERS=true"
 {% endif %}
