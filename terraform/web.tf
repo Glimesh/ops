@@ -85,7 +85,7 @@ resource "digitalocean_loadbalancer" "glimesh_public_web_lb" {
   region                   = "nyc3"
   vpc_uuid                 = digitalocean_vpc.glimesh_public_vpc.id
   enable_backend_keepalive = true
-  size                     = "lb-large"
+  size                     = "lb-medium"
 
   sticky_sessions {
     type               = "cookies"
@@ -156,6 +156,12 @@ resource "digitalocean_firewall" "web_lb_only_traffic" {
     port_range  = "9100"
     source_tags = [digitalocean_tag.monitor.id]
   }
+  inbound_rule {
+    protocol    = "tcp"
+    port_range  = "4021"
+    source_tags = [digitalocean_tag.monitor.id]
+  }
+
 
   # From Load Balancer
   inbound_rule {
