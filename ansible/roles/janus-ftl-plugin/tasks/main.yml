@@ -144,7 +144,7 @@
 
 - name: download janus-gateway
   git:
-    repo: https://github.com/meetecho/janus-gateway.git
+    repo: https://github.com/Glimesh/janus-gateway.git
     dest: /tmp/janus-gateway
     recursive: true
     update: true
@@ -207,7 +207,7 @@
 
   # --buildtype=release
 - name: meson janus-ftl-plugin
-  shell: CC=gcc-10 CXX=g++-10 meson build/ --buildtype=debugoptimized
+  shell: CC=gcc-10 CXX=g++-10 meson build/ --buildtype=debugoptimized -D janus_playout_delay_support=true
   args:
     chdir: /tmp/janus-ftl-plugin
   # when: janus_ftl_plugin.changed
