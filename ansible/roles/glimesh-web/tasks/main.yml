@@ -52,6 +52,11 @@
     path: /tmp/glimesh.tv
     state: directory
 
+- name: remove old glimesh  directory
+  file:
+    path: /tmp/glimesh.tv
+    state: absent
+
 - name: download glimesh.tv
   git:
     repo: https://github.com/Glimesh/glimesh.tv.git
@@ -61,6 +66,11 @@
     force: true
     version: "{{ glimesh_version }}"
   register: glimesh
+
+# - name: remove old build directory
+#   file:
+#     path: /tmp/glimesh.tv/_build
+#     state: absent
 
 - name: register short git hash version
   command: git rev-parse --short HEAD
@@ -110,16 +120,12 @@
     chdir: /tmp/glimesh.tv
   # when: glimesh.changed
 
-- name: build static assets
-  command: npm run --prefix ./assets deploy
-  args:
-    chdir: /tmp/glimesh.tv
-  # when: glimesh.changed
-
 - name: digest static assets
-  command: mix phx.digest
+  command: mix assets.deploy
   args:
     chdir: /tmp/glimesh.tv
+  environment:
+    MIX_ENV: prod
   # when: glimesh.changed
 
 - name: build glimesh.tv
